@@ -3,7 +3,7 @@
 ## 1. Overview
 
 ### 1.1 Document Purpose
-This document outlines the detailed specifications for TaskFlow, a simple team task management system. It covers the functional and non-functional requirements, system architecture, and other relevant details necessary for the development of the system.
+This specification document covers the requirements and design for TaskFlow, a simple team task management system, based on the provided Business Requirements Document (BRD).
 
 ### 1.2 Product / Feature Name
 TaskFlow
@@ -16,13 +16,13 @@ TaskFlow
 ## 2. Background & Context
 
 ### 2.1 Business Context
-TaskFlow is being developed to address the need for a lightweight, easy-to-use task management system for small teams. The system aims to improve team productivity, provide clear accountability, and reduce reliance on email or spreadsheets for task tracking, as outlined in the Business Requirements Document (BRD).
+TaskFlow is being developed to improve team productivity by providing a centralized platform for task creation, assignment, and tracking, as outlined in the BRD. The goal is to enhance collaboration and visibility within teams while maintaining a simple and user-friendly interface.
 
 ### 2.2 Problem Statement
-Small teams currently lack a simple, efficient way to create, assign, and track tasks, leading to decreased productivity and accountability.
+Small teams currently lack a lightweight, easy-to-use task management system that can efficiently organize tasks, track progress, and provide clear accountability, leading to reduced productivity and increased reliance on email or spreadsheets for task tracking.
 
 ### 2.3 Goals & Objectives
-The primary goals of TaskFlow are to:
+The primary objectives of TaskFlow, as derived from the BRD, are to:
 - Improve team productivity by organizing tasks in one platform
 - Allow managers to track task progress easily
 - Provide clear accountability through task assignments
@@ -53,126 +53,136 @@ The primary goals of TaskFlow are to:
 ### FR-001: User Registration
 - **Description:** Users must be able to register and create an account with a unique username and password.
 - **User Interaction:** Users will fill out a registration form with their details and submit it.
-- **Expected Behavior:** The system will create a new user account and send a confirmation email to the user.
-- **Edge Cases:** Handling duplicate usernames, invalid email formats.
+- **Expected Behavior:** The system will create a new user account and send a confirmation email.
+- **Edge Cases:** Handling duplicate usernames, invalid email addresses.
 - **Acceptance Criteria:**
-  - [ ] The system creates a new user account successfully.
-  - [ ] The system sends a confirmation email to the user.
+  - [ ] Users can successfully register with a unique username and valid email.
+  - [ ] The system prevents registration with duplicate usernames.
+  - [ ] Users receive a confirmation email after registration.
 
 ### FR-002: Secure Login
-- **Description:** Users must be able to log in securely using their username and password.
-- **User Interaction:** Users will enter their username and password and submit the login form.
-- **Expected Behavior:** The system will authenticate the user and redirect them to the dashboard if the credentials are correct.
+- **Description:** Users must be able to log in securely using their registered credentials.
+- **User Interaction:** Users will enter their username and password in the login form.
+- **Expected Behavior:** The system will authenticate the user and grant access if the credentials are correct.
 - **Edge Cases:** Handling incorrect login credentials, password reset.
 - **Acceptance Criteria:**
-  - [ ] The system authenticates the user correctly.
-  - [ ] The system redirects the user to the dashboard after successful login.
+  - [ ] Users can log in successfully with correct credentials.
+  - [ ] The system prevents login with incorrect credentials.
+  - [ ] Users can reset their password if forgotten.
 
 ### FR-003: Task Creation
-- **Description:** Users must be able to create new tasks with a title, description, and priority.
+- **Description:** Users must be able to create new tasks with details such as title, description, and priority.
 - **User Interaction:** Users will fill out a task creation form and submit it.
-- **Expected Behavior:** The system will create a new task and display it on the dashboard.
-- **Edge Cases:** Handling empty task titles, descriptions.
+- **Expected Behavior:** The system will create a new task and display it in the dashboard.
+- **Edge Cases:** Handling task title duplication, invalid input.
 - **Acceptance Criteria:**
-  - [ ] The system creates a new task successfully.
-  - [ ] The system displays the new task on the dashboard.
+  - [ ] Users can create tasks with required details.
+  - [ ] The system prevents task creation with missing required fields.
+  - [ ] Tasks are displayed in the dashboard after creation.
 
 ### FR-004: Task Assignment
 - **Description:** Users must be able to assign tasks to team members.
-- **User Interaction:** Users will select a task and a team member to assign it to.
-- **Expected Behavior:** The system will update the task assignment and notify the assigned user.
-- **Edge Cases:** Handling assignment to non-existent users.
+- **User Interaction:** Users will select a task and assign it to a team member.
+- **Expected Behavior:** The system will update the task with the assigned user and notify the assignee.
+- **Edge Cases:** Handling assignment to non-existent users, multiple assignments.
 - **Acceptance Criteria:**
-  - [ ] The system assigns the task to the selected team member.
-  - [ ] The system notifies the assigned user.
+  - [ ] Users can assign tasks to existing team members.
+  - [ ] The system prevents assignment to non-existent users.
+  - [ ] Assignees receive notifications upon task assignment.
 
 ### FR-005: Task Editing
 - **Description:** Users must be able to edit existing tasks.
-- **User Interaction:** Users will select a task and make changes to its details.
-- **Expected Behavior:** The system will update the task details.
-- **Edge Cases:** Handling edits to tasks assigned to other users.
+- **User Interaction:** Users will select a task and edit its details.
+- **Expected Behavior:** The system will update the task with the new details.
+- **Edge Cases:** Handling edit conflicts, invalid input.
 - **Acceptance Criteria:**
-  - [ ] The system updates the task details successfully.
-  - [ ] The system reflects the changes on the dashboard.
+  - [ ] Users can edit task details successfully.
+  - [ ] The system prevents editing with invalid input.
+  - [ ] Tasks are updated correctly in the dashboard.
 
-### FR-006: Task Completion
-- **Description:** Users must be able to mark tasks as completed.
-- **User Interaction:** Users will select a task and mark it as completed.
-- **Expected Behavior:** The system will update the task status to completed.
-- **Edge Cases:** Handling completion of tasks assigned to other users.
-- **Acceptance Criteria:**
-  - [ ] The system updates the task status to completed.
-  - [ ] The system reflects the change on the dashboard.
-
-### FR-007: Task Deletion
+### FR-006: Task Deletion
 - **Description:** Users must be able to delete tasks.
-- **User Interaction:** Users will select a task and confirm its deletion.
-- **Expected Behavior:** The system will remove the task from the database and the dashboard.
-- **Edge Cases:** Handling deletion of tasks assigned to other users.
+- **User Interaction:** Users will select a task and confirm deletion.
+- **Expected Behavior:** The system will remove the task from the dashboard and database.
+- **Edge Cases:** Handling deletion of assigned tasks, tasks with dependencies.
 - **Acceptance Criteria:**
-  - [ ] The system deletes the task successfully.
-  - [ ] The system removes the task from the dashboard.
+  - [ ] Users can delete tasks successfully.
+  - [ ] The system prevents deletion of tasks with dependencies.
+  - [ ] Tasks are removed from the dashboard after deletion.
 
-### FR-008: Dashboard Display
+### FR-007: Task Status Tracking
+- **Description:** Users must be able to track the status of tasks.
+- **User Interaction:** Users will view the task dashboard.
+- **Expected Behavior:** The system will display the current status of each task.
+- **Edge Cases:** Handling status updates, filtering by status.
+- **Acceptance Criteria:**
+  - [ ] Users can view the current status of tasks.
+  - [ ] The system updates task status in real-time.
+  - [ ] Users can filter tasks by status.
+
+### FR-008: Dashboard
 - **Description:** The system must display a dashboard showing all tasks.
-- **User Interaction:** Users will access the dashboard.
-- **Expected Behavior:** The system will display all tasks, including their status and assignments.
-- **Edge Cases:** Handling a large number of tasks.
+- **User Interaction:** Users will view the task dashboard.
+- **Expected Behavior:** The system will display a list of all tasks with their details.
+- **Edge Cases:** Handling large numbers of tasks, filtering and sorting.
 - **Acceptance Criteria:**
-  - [ ] The system displays all tasks on the dashboard.
-  - [ ] The system shows task status and assignments correctly.
+  - [ ] The dashboard displays all tasks.
+  - [ ] Users can filter tasks by various criteria.
+  - [ ] Users can sort tasks by different attributes.
 
-### FR-009: Task Filtering
+### FR-009: Notification System
+- **Description:** Users must receive notifications when tasks are assigned to them.
+- **User Interaction:** Users will receive notifications.
+- **Expected Behavior:** The system will send notifications to users upon task assignment.
+- **Edge Cases:** Handling notification preferences, notification delivery failures.
+- **Acceptance Criteria:**
+  - [ ] Users receive notifications upon task assignment.
+  - [ ] Users can manage notification preferences.
+  - [ ] The system handles notification delivery failures.
+
+### FR-010: Task Filtering
 - **Description:** Users must be able to filter tasks by status.
 - **User Interaction:** Users will select a filter option.
-- **Expected Behavior:** The system will display tasks matching the selected filter.
-- **Edge Cases:** Handling filters with no matching tasks.
+- **Expected Behavior:** The system will display tasks matching the filter criteria.
+- **Edge Cases:** Handling multiple filter options, invalid filter input.
 - **Acceptance Criteria:**
-  - [ ] The system filters tasks by status correctly.
-  - [ ] The system displays the filtered tasks on the dashboard.
-
-### FR-010: Notification System
-- **Description:** Users must receive notifications when tasks are assigned to them.
-- **User Interaction:** None, system-generated.
-- **Expected Behavior:** The system will send a notification to the assigned user.
-- **Edge Cases:** Handling notifications for tasks assigned to multiple users.
-- **Acceptance Criteria:**
-  - [ ] The system sends a notification to the assigned user.
-  - [ ] The notification contains the task details.
+  - [ ] Users can filter tasks by status.
+  - [ ] The system prevents filtering with invalid input.
+  - [ ] Tasks are filtered correctly based on the selected status.
 
 ---
 
 ## 5. Non-Functional Requirements
 
-### NFR-001: Scalability
+### NFR-001: System Scalability
 - **Category:** Performance
 - **Description:** The system should support at least 500 concurrent users.
-- **Target Metric:** 500 concurrent users without significant performance degradation.
+- **Target Metric:** Average response time < 2 seconds, system uptime > 99.5%.
 
-### NFR-002: Response Time
+### NFR-002: API Response Time
 - **Category:** Performance
 - **Description:** API response time should be under 2 seconds.
-- **Target Metric:** Average API response time < 2 seconds.
+- **Target Metric:** 99% of API requests respond within 2 seconds.
 
-### NFR-003: Uptime
+### NFR-003: System Uptime
 - **Category:** Reliability
 - **Description:** System uptime should be at least 99.5%.
-- **Target Metric:** System uptime ≥ 99.5%.
+- **Target Metric:** System availability for 99.5% of the time in a given month.
 
-### NFR-004: Security
+### NFR-004: Password Security
 - **Category:** Security
 - **Description:** User passwords must be securely hashed.
-- **Target Metric:** All user passwords are hashed using a secure algorithm (e.g., bcrypt).
+- **Target Metric:** Passwords are hashed using a secure algorithm (e.g., bcrypt).
 
-### NFR-005: Encryption
+### NFR-005: Secure Communication
 - **Category:** Security
 - **Description:** Application must use HTTPS for all communication.
-- **Target Metric:** All communication between the client and server uses HTTPS.
+- **Target Metric:** All traffic between the client and server is encrypted.
 
-### NFR-006: Usability
+### NFR-006: UI Responsiveness
 - **Category:** Usability
 - **Description:** UI must be responsive and usable on desktop and tablet.
-- **Target Metric:** The UI is responsive and usable on desktop and tablet devices.
+- **Target Metric:** UI elements are accessible and usable on both desktop and tablet devices.
 
 ---
 
@@ -182,16 +192,13 @@ The primary goals of TaskFlow are to:
 TaskFlow will consist of a frontend built with React and Tailwind CSS, a backend built with FastAPI (Python), and a database using PostgreSQL. The system will utilize JWT-based authentication for secure login and will be deployed using Docker on AWS or Azure Cloud.
 
 ### 6.2 Data Model
-The data model will include the following entities:
-- User: Stores user account information (user_id, name, email, password_hash, created_at)
-- Task: Stores task details (task_id, title, description, status, priority, created_by, created_at)
-- Assignment: Maps tasks to users (assignment_id, task_id, user_id, assigned_at)
+The data model will include entities for User, Task, and Assignment, with relationships between them to facilitate task assignment and tracking.
 
 ### 6.3 API Contracts
-The API will include endpoints for user registration, login, task creation, task assignment, task editing, task completion, and task deletion. Request and response formats will be in JSON.
+Key API endpoints will include user registration, login, task creation, task assignment, and task status updates. Request and response formats will be in JSON.
 
 ### 6.4 Integration Points
-The system will not integrate with external project management tools in the initial release.
+The system will integrate with the PostgreSQL database for data storage and retrieval, and with the cloud provider (AWS or Azure) for deployment and scaling.
 
 ---
 
@@ -203,11 +210,11 @@ The system will not integrate with external project management tools in the init
 - Internet connectivity is available.
 
 ### 7.2 Dependencies
-- Frontend: React, Tailwind CSS
-- Backend: FastAPI (Python)
-- Database: PostgreSQL
-- Authentication: JWT-based authentication
-- Deployment: Docker, AWS or Azure Cloud
+- React for frontend development
+- FastAPI (Python) for backend development
+- PostgreSQL for database management
+- Docker for containerization
+- AWS or Azure Cloud for deployment
 
 ---
 
@@ -215,20 +222,19 @@ The system will not integrate with external project management tools in the init
 
 | Risk | Impact | Likelihood | Mitigation |
 |------|--------|------------|------------|
-| Delay in development | High | Medium | Regular project meetings, agile development methodology |
-| Security breaches | High | Low | Implement secure coding practices, regular security audits |
-| Low adoption rate | Medium | Medium | Conduct user testing, gather feedback for improvements |
+| Technical Debt | High | Medium | Regular code reviews and refactoring. |
+| Security Breach | High | Low | Implementing secure practices such as HTTPS and password hashing. |
+| Scalability Issues | Medium | High | Monitoring system performance and scaling as needed. |
 
 ---
 
 ## 9. Appendix
 
 ### 9.1 Glossary
-- **Task:** A unit of work assigned to a user.
-- **Assignment:** The mapping of a task to a user.
-- **Dashboard:** The main interface displaying all tasks.
+- **Task:** A unit of work assigned to a team member.
+- **Assignment:** The act of assigning a task to a team member.
+- **Dashboard:** A centralized view of all tasks.
 
 ### 9.2 References
-- Business Requirements Document (BRD) for TaskFlow
-- System design documents
-- Technology stack documentation (React, FastAPI, PostgreSQL, etc.)
+- Business Requirements Document (BRD) for TaskFlow.
+- Technical documentation for React, FastAPI, PostgreSQL, Docker, and AWS/Azure Cloud services.
