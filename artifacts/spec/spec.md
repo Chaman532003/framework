@@ -1,72 +1,67 @@
 # Technical Design Document (TDD) for TaskFlow
 ## Introduction
-TaskFlow is a simple team task management system designed to improve collaboration and task visibility within small teams. This document outlines the technical design and architecture of the system, based on the requirements defined in the Business Requirements Document (BRD).
+TaskFlow is a simple team task management system designed to improve collaboration and task visibility within small teams. This document outlines the technical design of TaskFlow, including the architecture, components, and technologies used.
 
 ## System Architecture
-The system will consist of the following components:
-- **Frontend**: Built using React and Tailwind CSS, responsible for user interaction and UI.
-- **Backend**: Built using FastAPI (Python), responsible for handling API requests, business logic, and database interactions.
-- **Database**: PostgreSQL, used for storing user, task, and assignment data.
-- **Authentication**: JWT-based authentication, used for secure user authentication and authorization.
+The system will be built using a microservices architecture, with the following components:
+* **Frontend**: A web application built using React and Tailwind CSS, responsible for user interaction and UI rendering.
+* **Backend**: A RESTful API built using FastAPI (Python), responsible for business logic, data storage, and retrieval.
+* **Database**: A PostgreSQL database, responsible for storing user and task data.
+* **Authentication**: JWT-based authentication, responsible for securing user sessions and API requests.
 
-## Database Design
-The database will consist of three main tables:
-### User Table
-- **user_id** (primary key): Unique identifier for each user.
-- **name**: User's full name.
-- **email**: User's email address.
-- **password_hash**: Securely hashed user password.
-- **created_at**: Timestamp for when the user account was created.
+## Component Design
+### Frontend
+The frontend will be built using React, with the following features:
+* **Task List**: A component that displays a list of tasks, with filtering and sorting capabilities.
+* **Task Form**: A component that allows users to create and edit tasks.
+* **Dashboard**: A component that displays a summary of tasks and user activity.
+* **Notification System**: A component that displays notifications to users when tasks are assigned or updated.
 
-### Task Table
-- **task_id** (primary key): Unique identifier for each task.
-- **title**: Task title.
-- **description**: Task description.
-- **status**: Task status (e.g., "to-do", "in-progress", "completed").
-- **priority**: Task priority (e.g., "low", "medium", "high").
-- **created_by**: User who created the task.
-- **created_at**: Timestamp for when the task was created.
+### Backend
+The backend will be built using FastAPI, with the following features:
+* **User Management**: API endpoints for user registration, login, and profile management.
+* **Task Management**: API endpoints for task creation, assignment, and updates.
+* **Assignment Management**: API endpoints for assigning tasks to users.
+* **Notification System**: API endpoints for sending notifications to users.
 
-### Assignment Table
-- **assignment_id** (primary key): Unique identifier for each assignment.
-- **task_id** (foreign key): References the Task table.
-- **user_id** (foreign key): References the User table.
-- **assigned_at**: Timestamp for when the task was assigned.
+### Database
+The database will be designed with the following tables:
+* **Users**: Stores user account information, with columns for user_id, name, email, password_hash, and created_at.
+* **Tasks**: Stores task details, with columns for task_id, title, description, status, priority, created_by, and created_at.
+* **Assignments**: Stores task assignments, with columns for assignment_id, task_id, user_id, and assigned_at.
 
-## API Endpoints
-The following API endpoints will be implemented:
-- **POST /users**: Create a new user.
-- **POST /login**: Login a user.
-- **GET /tasks**: Retrieve a list of all tasks.
-- **POST /tasks**: Create a new task.
-- **GET /tasks/{task_id}**: Retrieve a specific task.
-- **PUT /tasks/{task_id}**: Update a task.
-- **DELETE /tasks/{task_id}**: Delete a task.
-- **POST /tasks/{task_id}/assign**: Assign a task to a user.
-- **GET /tasks/{task_id}/assignments**: Retrieve a list of assignments for a task.
+## Technology Stack
+The system will be built using the following technologies:
+* **Frontend**: React, Tailwind CSS
+* **Backend**: FastAPI (Python)
+* **Database**: PostgreSQL
+* **Authentication**: JWT-based authentication
+* **Deployment**: Docker, AWS or Azure Cloud
+
+## Data Flow
+The system will follow the following data flow:
+1. **User Registration**: A user registers for an account, and their information is stored in the Users table.
+2. **Task Creation**: A user creates a new task, and the task details are stored in the Tasks table.
+3. **Task Assignment**: A user assigns a task to another user, and the assignment is stored in the Assignments table.
+4. **Notification**: The system sends a notification to the assigned user, using the Notification System component.
 
 ## Security Considerations
-- **Password Hashing**: User passwords will be securely hashed using a salted hashing algorithm (e.g., bcrypt).
-- **JWT Authentication**: JWT tokens will be used for authentication and authorization.
-- **HTTPS**: All communication between the client and server will be encrypted using HTTPS.
+The system will implement the following security measures:
+* **Password Hashing**: User passwords will be securely hashed using a salted hashing algorithm.
+* **HTTPS**: All communication between the client and server will be encrypted using HTTPS.
+* **Authentication**: JWT-based authentication will be used to secure user sessions and API requests.
 
-## Deployment
-The system will be deployed using Docker and hosted on either AWS or Azure Cloud.
+## Deployment Strategy
+The system will be deployed using the following strategy:
+1. **Dockerization**: The application will be containerized using Docker.
+2. **Cloud Deployment**: The containerized application will be deployed to AWS or Azure Cloud.
+3. **Scaling**: The application will be designed to scale horizontally, using load balancers and auto-scaling groups.
 
-## Assumptions and Constraints
-The following assumptions and constraints have been considered:
-- **User Familiarity**: Users have basic familiarity with web applications.
-- **Team Size**: Teams will consist of fewer than 50 members.
-- **Internet Connectivity**: Internet connectivity is available.
-- **Initial Release**: The initial release must be completed within 3 months.
-- **Operational Costs**: The system should minimize operational costs.
-- **Open-Source Technologies**: Only open-source technologies will be used where possible.
-
-## Success Criteria
-The project will be considered successful if:
-- Users can create and manage tasks easily.
-- Task completion rates improve within teams.
-- System adoption reaches at least 80% of the target users.
+## Testing Strategy
+The system will be tested using the following strategy:
+1. **Unit Testing**: Unit tests will be written for each component, using testing frameworks such as Jest and Pytest.
+2. **Integration Testing**: Integration tests will be written to test the interactions between components, using testing frameworks such as Cypress and Pytest.
+3. **End-to-End Testing**: End-to-end tests will be written to test the entire system, using testing frameworks such as Cypress and Selenium.
 
 ## Conclusion
-The technical design and architecture of TaskFlow have been outlined in this document. The system will provide a simple and efficient way for small teams to manage tasks and improve collaboration. The design takes into account the requirements defined in the BRD and ensures a secure, scalable, and maintainable system.
+The technical design of TaskFlow is a scalable and secure system, built using a microservices architecture and modern technologies. The system is designed to improve collaboration and task visibility within small teams, and will be deployed to the cloud using a containerized deployment strategy.
