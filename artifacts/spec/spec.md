@@ -1,67 +1,91 @@
 # Technical Design Document (TDD) for TaskFlow
 ## Introduction
-TaskFlow is a simple team task management system designed to improve collaboration and task visibility within small teams. This document outlines the technical design of TaskFlow, including the architecture, components, and technologies used.
+TaskFlow is a simple team task management system designed to improve collaboration and task visibility within small teams. This document outlines the technical design for TaskFlow, covering the architecture, components, and technologies used to meet the business requirements outlined in the Business Requirements Document (BRD).
 
 ## System Architecture
-The system will be built using a microservices architecture, with the following components:
-* **Frontend**: A web application built using React and Tailwind CSS, responsible for user interaction and UI rendering.
-* **Backend**: A RESTful API built using FastAPI (Python), responsible for business logic, data storage, and retrieval.
-* **Database**: A PostgreSQL database, responsible for storing user and task data.
-* **Authentication**: JWT-based authentication, responsible for securing user sessions and API requests.
+The system will follow a microservices architecture, with separate services for the frontend, backend, and database. This will allow for scalability, flexibility, and easier maintenance.
 
-## Component Design
 ### Frontend
-The frontend will be built using React, with the following features:
-* **Task List**: A component that displays a list of tasks, with filtering and sorting capabilities.
-* **Task Form**: A component that allows users to create and edit tasks.
-* **Dashboard**: A component that displays a summary of tasks and user activity.
-* **Notification System**: A component that displays notifications to users when tasks are assigned or updated.
+The frontend will be built using React and Tailwind CSS, providing a responsive and user-friendly interface. It will be responsible for handling user input, displaying tasks, and communicating with the backend API.
 
 ### Backend
-The backend will be built using FastAPI, with the following features:
-* **User Management**: API endpoints for user registration, login, and profile management.
-* **Task Management**: API endpoints for task creation, assignment, and updates.
-* **Assignment Management**: API endpoints for assigning tasks to users.
-* **Notification System**: API endpoints for sending notifications to users.
+The backend will be built using FastAPI (Python), providing a fast and efficient API for the frontend to interact with. It will handle user authentication, task creation, assignment, and tracking, as well as notification management.
 
 ### Database
-The database will be designed with the following tables:
-* **Users**: Stores user account information, with columns for user_id, name, email, password_hash, and created_at.
-* **Tasks**: Stores task details, with columns for task_id, title, description, status, priority, created_by, and created_at.
-* **Assignments**: Stores task assignments, with columns for assignment_id, task_id, user_id, and assigned_at.
+The database will be designed using PostgreSQL, providing a robust and scalable storage solution for user and task data.
 
-## Technology Stack
-The system will be built using the following technologies:
-* **Frontend**: React, Tailwind CSS
-* **Backend**: FastAPI (Python)
-* **Database**: PostgreSQL
-* **Authentication**: JWT-based authentication
-* **Deployment**: Docker, AWS or Azure Cloud
+## Component Design
+The system will consist of the following components:
 
-## Data Flow
-The system will follow the following data flow:
-1. **User Registration**: A user registers for an account, and their information is stored in the Users table.
-2. **Task Creation**: A user creates a new task, and the task details are stored in the Tasks table.
-3. **Task Assignment**: A user assigns a task to another user, and the assignment is stored in the Assignments table.
-4. **Notification**: The system sends a notification to the assigned user, using the Notification System component.
+### User Service
+Responsible for user registration, login, and account management.
 
-## Security Considerations
-The system will implement the following security measures:
-* **Password Hashing**: User passwords will be securely hashed using a salted hashing algorithm.
-* **HTTPS**: All communication between the client and server will be encrypted using HTTPS.
-* **Authentication**: JWT-based authentication will be used to secure user sessions and API requests.
+### Task Service
+Responsible for task creation, assignment, editing, and deletion.
 
-## Deployment Strategy
-The system will be deployed using the following strategy:
-1. **Dockerization**: The application will be containerized using Docker.
-2. **Cloud Deployment**: The containerized application will be deployed to AWS or Azure Cloud.
-3. **Scaling**: The application will be designed to scale horizontally, using load balancers and auto-scaling groups.
+### Notification Service
+Responsible for sending notifications to users when tasks are assigned or updated.
 
-## Testing Strategy
-The system will be tested using the following strategy:
-1. **Unit Testing**: Unit tests will be written for each component, using testing frameworks such as Jest and Pytest.
-2. **Integration Testing**: Integration tests will be written to test the interactions between components, using testing frameworks such as Cypress and Pytest.
-3. **End-to-End Testing**: End-to-end tests will be written to test the entire system, using testing frameworks such as Cypress and Selenium.
+### Dashboard Service
+Responsible for displaying a dashboard of all tasks for each user.
+
+## Data Model
+The data model will consist of the following entities:
+
+### User
+- user_id (primary key)
+- name
+- email
+- password_hash
+- created_at
+
+### Task
+- task_id (primary key)
+- title
+- description
+- status
+- priority
+- created_by
+- created_at
+
+### Assignment
+- assignment_id (primary key)
+- task_id (foreign key)
+- user_id (foreign key)
+- assigned_at
+
+## API Design
+The API will consist of the following endpoints:
+
+### User Endpoints
+- `POST /users`: Create a new user
+- `GET /users`: Get all users
+- `GET /users/{user_id}`: Get a user by ID
+- `PUT /users/{user_id}`: Update a user
+- `DELETE /users/{user_id}`: Delete a user
+
+### Task Endpoints
+- `POST /tasks`: Create a new task
+- `GET /tasks`: Get all tasks
+- `GET /tasks/{task_id}`: Get a task by ID
+- `PUT /tasks/{task_id}`: Update a task
+- `DELETE /tasks/{task_id}`: Delete a task
+
+### Assignment Endpoints
+- `POST /assignments`: Create a new assignment
+- `GET /assignments`: Get all assignments
+- `GET /assignments/{assignment_id}`: Get an assignment by ID
+- `PUT /assignments/{assignment_id}`: Update an assignment
+- `DELETE /assignments/{assignment_id}`: Delete an assignment
+
+## Security
+The system will use JWT-based authentication to secure user interactions. All communication will be encrypted using HTTPS.
+
+## Deployment
+The system will be deployed using Docker and hosted on either AWS or Azure Cloud. This will provide a scalable and secure environment for the application.
+
+## Testing
+The system will undergo thorough testing, including unit testing, integration testing, and user acceptance testing (UAT). This will ensure that the system meets the business requirements and is free from defects.
 
 ## Conclusion
-The technical design of TaskFlow is a scalable and secure system, built using a microservices architecture and modern technologies. The system is designed to improve collaboration and task visibility within small teams, and will be deployed to the cloud using a containerized deployment strategy.
+The technical design for TaskFlow outlined in this document provides a solid foundation for building a simple and effective team task management system. By following this design, the development team can ensure that the system meets the business requirements and is delivered on time and within budget.
