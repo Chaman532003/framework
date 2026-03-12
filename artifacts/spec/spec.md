@@ -1,91 +1,85 @@
 # Technical Design Document (TDD) for TaskFlow
 ## Introduction
-TaskFlow is a simple team task management system designed to improve collaboration and task visibility within small teams. This document outlines the technical design for TaskFlow, covering the architecture, components, and technologies used to meet the business requirements outlined in the Business Requirements Document (BRD).
+TaskFlow is a simple team task management system designed to improve collaboration and task visibility within small teams. This document outlines the technical design and architecture of the system, based on the requirements defined in the Business Requirements Document (BRD).
 
 ## System Architecture
-The system will follow a microservices architecture, with separate services for the frontend, backend, and database. This will allow for scalability, flexibility, and easier maintenance.
+The system will be built using a microservices architecture, with the following components:
+* Frontend: A web application built using React and Tailwind CSS, responsible for user interaction and UI.
+* Backend: A RESTful API built using FastAPI (Python), responsible for business logic and data storage.
+* Database: A PostgreSQL database, responsible for storing user and task data.
+* Authentication: JWT-based authentication, responsible for securing user sessions.
 
-### Frontend
-The frontend will be built using React and Tailwind CSS, providing a responsive and user-friendly interface. It will be responsible for handling user input, displaying tasks, and communicating with the backend API.
+### System Components
 
-### Backend
-The backend will be built using FastAPI (Python), providing a fast and efficient API for the frontend to interact with. It will handle user authentication, task creation, assignment, and tracking, as well as notification management.
+#### Frontend
+* **User Interface**: The frontend will provide a simple and intuitive UI for users to create, assign, and track tasks.
+* **API Client**: The frontend will communicate with the backend API using RESTful API calls.
 
-### Database
-The database will be designed using PostgreSQL, providing a robust and scalable storage solution for user and task data.
+#### Backend
+* **API Server**: The backend will provide a RESTful API for the frontend to interact with, responsible for business logic and data storage.
+* **Database Connector**: The backend will connect to the PostgreSQL database to store and retrieve user and task data.
+* **Authentication Service**: The backend will handle user authentication using JWT-based authentication.
 
-## Component Design
-The system will consist of the following components:
+#### Database
+* **User Table**: Stores user account information, including user ID, name, email, password hash, and created at timestamp.
+* **Task Table**: Stores task details, including task ID, title, description, status, priority, created by, and created at timestamp.
+* **Assignment Table**: Maps tasks to users, including assignment ID, task ID, user ID, and assigned at timestamp.
 
-### User Service
-Responsible for user registration, login, and account management.
-
-### Task Service
-Responsible for task creation, assignment, editing, and deletion.
-
-### Notification Service
-Responsible for sending notifications to users when tasks are assigned or updated.
-
-### Dashboard Service
-Responsible for displaying a dashboard of all tasks for each user.
+### System Flow
+1. **User Registration**: The user registers for an account through the frontend, which sends a request to the backend API to create a new user.
+2. **User Login**: The user logs in to their account through the frontend, which sends a request to the backend API to authenticate the user.
+3. **Task Creation**: The user creates a new task through the frontend, which sends a request to the backend API to create a new task.
+4. **Task Assignment**: The user assigns a task to a team member through the frontend, which sends a request to the backend API to create a new assignment.
+5. **Task Tracking**: The user views and updates task status through the frontend, which sends requests to the backend API to retrieve and update task data.
 
 ## Data Model
-The data model will consist of the following entities:
+The data model consists of three entities: User, Task, and Assignment.
 
-### User
-- user_id (primary key)
-- name
-- email
-- password_hash
-- created_at
+### User Entity
+* **user_id** (primary key): Unique identifier for the user.
+* **name**: The user's name.
+* **email**: The user's email address.
+* **password_hash**: The user's password hash.
+* **created_at**: The timestamp when the user account was created.
 
-### Task
-- task_id (primary key)
-- title
-- description
-- status
-- priority
-- created_by
-- created_at
+### Task Entity
+* **task_id** (primary key): Unique identifier for the task.
+* **title**: The task title.
+* **description**: The task description.
+* **status**: The task status (e.g. "pending", "in progress", "completed").
+* **priority**: The task priority (e.g. "high", "medium", "low").
+* **created_by**: The user who created the task.
+* **created_at**: The timestamp when the task was created.
 
-### Assignment
-- assignment_id (primary key)
-- task_id (foreign key)
-- user_id (foreign key)
-- assigned_at
+### Assignment Entity
+* **assignment_id** (primary key): Unique identifier for the assignment.
+* **task_id** (foreign key): The task ID.
+* **user_id** (foreign key): The user ID.
+* **assigned_at**: The timestamp when the task was assigned.
 
-## API Design
-The API will consist of the following endpoints:
+## Technology Stack
+The technology stack consists of the following components:
+* **Frontend**: React, Tailwind CSS.
+* **Backend**: FastAPI (Python).
+* **Database**: PostgreSQL.
+* **Authentication**: JWT-based authentication.
+* **Deployment**: Docker, AWS or Azure Cloud.
 
-### User Endpoints
-- `POST /users`: Create a new user
-- `GET /users`: Get all users
-- `GET /users/{user_id}`: Get a user by ID
-- `PUT /users/{user_id}`: Update a user
-- `DELETE /users/{user_id}`: Delete a user
+## Security Considerations
+The system will implement the following security measures:
+* **Password Hashing**: User passwords will be securely hashed using a salted hashing algorithm.
+* **HTTPS**: All communication between the frontend and backend will be encrypted using HTTPS.
+* **Authentication**: JWT-based authentication will be used to secure user sessions.
+* **Input Validation**: All user input will be validated and sanitized to prevent SQL injection and cross-site scripting (XSS) attacks.
 
-### Task Endpoints
-- `POST /tasks`: Create a new task
-- `GET /tasks`: Get all tasks
-- `GET /tasks/{task_id}`: Get a task by ID
-- `PUT /tasks/{task_id}`: Update a task
-- `DELETE /tasks/{task_id}`: Delete a task
+## Scalability and Performance
+The system will be designed to scale horizontally, with the ability to add more instances of the backend API and database as needed. The system will also implement caching and load balancing to improve performance.
 
-### Assignment Endpoints
-- `POST /assignments`: Create a new assignment
-- `GET /assignments`: Get all assignments
-- `GET /assignments/{assignment_id}`: Get an assignment by ID
-- `PUT /assignments/{assignment_id}`: Update an assignment
-- `DELETE /assignments/{assignment_id}`: Delete an assignment
+## Testing and Quality Assurance
+The system will undergo thorough testing and quality assurance, including:
+* **Unit Testing**: Unit tests will be written for all backend API endpoints and frontend components.
+* **Integration Testing**: Integration tests will be written to test the interaction between the frontend and backend.
+* **End-to-End Testing**: End-to-end tests will be written to test the entire system, from user registration to task creation and assignment.
 
-## Security
-The system will use JWT-based authentication to secure user interactions. All communication will be encrypted using HTTPS.
-
-## Deployment
-The system will be deployed using Docker and hosted on either AWS or Azure Cloud. This will provide a scalable and secure environment for the application.
-
-## Testing
-The system will undergo thorough testing, including unit testing, integration testing, and user acceptance testing (UAT). This will ensure that the system meets the business requirements and is free from defects.
-
-## Conclusion
-The technical design for TaskFlow outlined in this document provides a solid foundation for building a simple and effective team task management system. By following this design, the development team can ensure that the system meets the business requirements and is delivered on time and within budget.
+## Deployment and Maintenance
+The system will be deployed using Docker and AWS or Azure Cloud. The system will be monitored and maintained regularly, with updates and patches applied as needed to ensure security and performance.
