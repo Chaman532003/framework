@@ -1,481 +1,459 @@
-Architecture Design Document: TaskFlow
+Architecture Design Document
+TaskFlow — Lightweight Team Task Management Web App
 Revision: 1.0
 Author: Senior Solutions Architect
 Date: 2026-03-13
 
-Retrieved references used
-- Architecture workflow guidelines: iterative-development-guide.md, language-agnostic-standards.md, markdown-styleguide.md
-- Architecture rules: performance-best-practices.md, security-standards-owasp.md, code-anti-patterns.md, dry-principle-guidelines.md
-- Architecture template: (standard architecture template followed: context → containers → components → APIs → data → infra → security → observability → ADRs)
+1. Executive Summary
+- Purpose: Provide a scalable, secure, maintainable architecture for TaskFlow that meets functional and non-functional requirements in the Product Specification (MVP in a 3‑month timebox).
+- Scope: Covers system context, containers and components, API contracts, data model, infrastructure, security, scalability, observability, and Architecture Decision Records (ADRs).
+- Key goals: Support core FRs (registration, auth, task CRUD, assignment, dashboard, notifications), <2s API responses under normal load, ~500 concurrent users, deployable via Docker on AWS or Azure, >=99.5% uptime in monitoring window.
 
-Executive summary
-- Purpose: Define a scalable, secure, maintainable architecture for TaskFlow — a lightweight team task management web app supporting ~500 concurrent users, deliverable within a 3-month MVP timeframe.
-- Primary goals: Implement MVP features (user registration/auth, task CRUD, assignment, dashboard/filtering, notifications), meet performance targets (<2s list endpoints under normal load), ensure secure defaults (HTTPS, password hashing, JWT), and enable easy deployment via Docker on AWS or Azure.
-- High-level decision: Cloud-native, containerized architecture using React frontend, FastAPI backend, PostgreSQL for persistence, Redis for caching and task queue (RQ/Celery-compatible), and observability via Prometheus/Grafana + OpenTelemetry.
+2. Goals, Constraints, and Non-Goals
+- Primary goals
+  - Deliver MVP features FR-001..FR-010 per spec.
+  - Rapid implementation using open-source stack: React, FastAPI, PostgreSQL, Docker.
+  - Secure by default (HTTPS, JWT, password hashing).
+  - Scalable to support ~500 concurrent users; straightforward horizontal scaling for future growth.
+- Constraints
+  - 3-month delivery window.
+  - Prefer open-source tooling and managed cloud services (AWS/Azure).
+  - Responsive UI for desktop/tablet only (no native mobile).
+- Non-goals (MVP)
+  - Advanced analytics and integrations.
+  - Complex role-based access beyond creator/assignee/manager basics.
+  - Mobile apps.
 
-Table of contents
-1. Requirements mapping
-2. System context (C4 - Level 1)
-3. Container architecture (C4 - Level 2)
-4. Component design (C4 - Level 3)
-5. API design (contracts)
-6. Data architecture
-7. Infrastructure & deployment
-8. Security architecture
-9. Observability, logging, and monitoring
-10. Scalability, availability & performance plan
-11. Testing strategy & CI/CD
-12. Operational runbook & backup/recovery
-13. Technology stack rationale
-14. Risks & mitigations (key)
-15. Architecture Decision Records (ADRs)
-16. Appendix: PlantUML diagrams and ERD
+3. Requirements Mapping (high level)
+- FR-001 Registration -> Frontend, Auth API, User service, Postgres
+- FR-002 Login -> Frontend, Auth API, JWT issuer, Rate limiter
+- FR-003 Create Task -> Frontend, Task API, Postgres
+- FR-004 Assign Task -> Frontend, Task API, Assignment record, Notification Service
+- FR-005 Edit Task -> Frontend, Task API, Authorization checks
+- FR-006 Mark Completed -> Task API, Notification optional
+- FR-007 Delete Task -> Task API (soft-delete), audit logs
+- FR-008 Dashboard -> Task API list endpoints, pagination, caching (optional)
+- FR-009 Filter Tasks -> Task API query parameters
+- FR-010 Notifications -> Notification Service (queue), Email provider and in-app notifications
 
-1. Requirements mapping
-- Mapped core FRs to components and acceptance criteria:
-  - FR-001 Register: POST /auth/register => create user with password_hash (bcrypt/argon2), return 201 + user_id + set auth JWT cookie.
-  - FR-002 Login: POST /auth/login => return short-lived access JWT (stored HttpOnly cookie) and refresh token option; rate limiting on endpoint.
-  - FR-003 Create task: POST /tasks => persist task (created_by), return 201 task_id.
-  - FR-004 Assign task: POST /tasks/{id}/assign => create assignment record, set task.assignee, enqueue notification.
-  - FR-005 Edit task: PATCH /tasks/{id} => 200 updated resource; 403/409 per rules.
-  - FR-006 Complete: PATCH /tasks/{id}/status => set completed_at; optional notify creator.
-  - FR-007 Delete: DELETE /tasks/{id} => soft-delete (deleted_at), 204.
-  - FR-008 Dashboard: GET /tasks with pagination/filtering => returns paginated results within NFR.
-  - FR-009 Filter: GET /tasks?status=completed etc.
-  - FR-010 Notifications: Notification Service + queue ensures delivery within 1 minute target; retries for transient failures.
-
-Non-functional requirements (explicit/derived)
-- Performance: <2s for list endpoints under normal load (500 concurrent users).
-- Security: HTTPS-only, JWT-based auth, bcrypt/argon2 password hashing, OWASP controls, rate limiting.
-- Availability: >=99.5% uptime target; use managed services and health checks.
-- Maintainability: Containerized services, clear component boundaries, infra-as-code.
-- Deployability: Docker-based images, CI/CD, support AWS/Azure.
-
-2. System context (C4 - Level 1)
-Purpose: Show TaskFlow in its environment.
+4. System Context (C4 - Level 1)
+- Primary actors: Registered User (and Manager as privileged user)
+- External systems: Email Provider (SMTP or SES), Identity store (internal), Monitoring (Prometheus/Grafana, Sentry), Cloud provider (AWS/Azure)
+- System: TaskFlow (Frontend + Backend + Notification subsystem + Database + Queue)
 
 PlantUML (C4 Context)
 ```plantuml
 @startuml
-!define AWSPUML https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v14.0/Advanced/AWSCommon.puml
-actor "End User (Browser)" as User
-actor "Admin / Manager" as Manager
-rectangle "TaskFlow System" {
-  rectangle "Web App (React)" as Frontend
-  rectangle "API Backend (FastAPI)" as Backend
-  rectangle "Notification Worker" as Notif
-  rectangle "PostgreSQL" as DB
-  rectangle "Redis (cache & queue)" as Redis
-}
-User --> Frontend : uses (HTTPS)
-Manager --> Frontend : uses (HTTPS)
-Frontend --> Backend : HTTPS JSON REST (JWT)
-Backend --> DB : SQL (Postgres)
-Backend --> Redis : cache reads/writes, enqueue notifications
-Notif --> Redis : dequeue, process notifications
-Notif --> Email Provider (SMTP/SES) : deliver email
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+Person(user, "Registered User", "Uses TaskFlow to manage tasks")
+Person(manager, "Manager", "Monitors team progress")
+System(system, "TaskFlow", "Web application (React + FastAPI)")
+System_Ext(email,"Email Provider","SMTP/SES")
+System_Ext(mon,"Monitoring","Prometheus/Grafana/Sentry")
+System_Ext(cloud,"Cloud Provider","AWS or Azure")
+user -> system : Uses web UI
+manager -> system : Uses web UI (additional permissions)
+system -> email : Send notifications
+system -> mon : Emits metrics/logs/alerts
+system -> cloud : Deployment resources
 @enduml
 ```
 
-Context narrative
-- Actors: Registered Users (developers, managers), Admins. External systems: Email provider (SMTP/SES), optional webhook receivers.
-- System boundary: TaskFlow consists of Frontend, API backend, Notification worker(s), and shared persistence/caching.
+5. Container Architecture (C4 - Level 2)
+- Containers:
+  - Web Client (React SPA) — served via CDN or static hosting (S3/Cloud Storage + CloudFront/Cdn)
+  - Backend API (FastAPI) — REST + GraphQL optional; issues JWTs and provides business APIs
+  - Notification Worker(s) — background processors (Celery / RQ) to deliver email and in-app notifications
+  - Message Queue — Redis (for RQ) or AWS SQS (managed) for decoupling notification delivery
+  - PostgreSQL — primary data store (managed RDS / Azure Database)
+  - Redis Cache — optional for caching and rate-limiting
+  - CI/CD pipeline, Container Registry, Infrastructure as Code (Terraform)
+  - Monitoring/Logging agents and services (Prometheus, Grafana, Sentry, ELK/Cloud Logging)
 
-3. Container architecture (C4 - Level 2)
-Containers
-- Web Frontend
-  - Purpose: UI built in React; static assets served via CDN (S3 + CloudFront) or static webserver (nginx).
-  - Characteristics: Client-rendered SPA; calls backend REST APIs; performs local caching and optimistic UI updates.
-- API Backend (FastAPI)
-  - Purpose: Business logic, auth issuing/validation, data access layer, input validation.
-  - Characteristics: Stateless; horizontally scalable; exposes REST API with OpenAPI schema; integrates with Redis, PostgreSQL, and Notification queue.
-- Notification Worker(s)
-  - Purpose: Consume assignment events, deliver email/in-app notifications, handle retry/backoff, update delivery status.
-  - Characteristics: Stateful process for retries; horizontally scalable workers.
-- PostgreSQL
-  - Purpose: Primary data store for users, tasks, assignments, audit logs.
-  - Characteristics: Managed instance recommended (RDS/Azure DB); backups and point-in-time recovery.
-- Redis
-  - Purpose: Cache frequently-read results (dashboard fragments), session/locks, message broker for notification queue.
-  - Characteristics: Single primary with replicas; persistence optional (AOF/RDB); used also for rate-limiting counters.
-- Optional: CDN for static frontend assets; SMTP/SES external provider.
-
-Container diagram (PlantUML)
+PlantUML (C4 Container)
 ```plantuml
 @startuml
-actor "User (Browser)" as User
-node "CDN / Static Host" as CDN
-node "React SPA (Browser)" as SPA
-node "API (FastAPI) - Docker" as API
-database "Postgres (RDS / Container)" as PG
-queue "Redis (Cache & Queue)" as REDIS
-node "Notification Worker(s)" as WORKER
-User -> CDN : load app
-User -> SPA : use app (HTTPS)
-SPA -> API : HTTPS JSON (JWT auth)
-API -> PG : SQL
-API -> REDIS : cache, rate-limiting, enqueue notifications
-WORKER -> REDIS : dequeue
-WORKER -> EmailProvider : SMTP/SES
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+Person(user,"Registered User")
+System_Boundary(taskflow,"TaskFlow") {
+  Container(web,"Web Client (React)","Browser SPA","Static assets served via CDN")
+  Container(api,"Backend API (FastAPI)","REST API","Business logic, JWT auth")
+  Container(worker,"Notification Worker","Python worker","Processes queue, sends email/in-app")
+  ContainerDb(db,"PostgreSQL","Relational DB","Persistent data: users, tasks, assignments")
+  Container(queue,"Message Queue","Redis/RQ or SQS","Queues notification jobs")
+  Container(cache,"Redis Cache","In-memory","Optional caching, rate-limiting")
+}
+System_Ext(email,"Email Provider (SMTP/SES)")
+user -> web : Uses UI
+web -> api : HTTPS (JWT)
+api -> db : SQL
+api -> queue : enqueue notification job
+worker -> queue : dequeue
+worker -> email : send
+api <-> cache : optional
 @enduml
 ```
 
-4. Component design (C4 - Level 3)
-API Backend internal components
-- HTTP/API Layer
-  - Responsibility: Request validation, auth (JWT verification), rate limiting, input sanitization, OpenAPI docs.
-- Auth module
-  - Responsibility: Registration, login, password hashing, JWT issuance, refresh token handling (if used), account lockout.
-- Task Service
-  - Responsibility: CRUD for tasks, status transitions, soft-delete, optimistic concurrency/versioning (ETag or version field).
-- Assignment Service
-  - Responsibility: Create assignment record, validate team membership, enforce authorization, write audit record, enqueue notification.
-- Notification Enqueuer
-  - Responsibility: Publish assignment events to Redis queue with metadata (recipient, method).
+6. Component Architecture (C4 - Level 3) — Backend API internals
+- Backend API components:
+  - API Gateway / HTTP layer (uvicorn + FastAPI)
+  - Auth Module: registration, login, JWT generation & validation, rate-limiting
+  - Users Service: user CRUD, profile, team membership
+  - Tasks Service: tasks CRUD, status transitions, soft-delete handling, audit fields, optimistic locking (versioning)
+  - Assignments Service: create assignment records, enforce team membership
+  - Notifications Adapter: enqueues notification events with metadata
+  - Persistence Layer: repositories/ORM (SQLAlchemy/Databases) and migrations (Alembic)
+  - Background Job interface (RQ/Celery) connector
+  - Observability & Health endpoints
+
+PlantUML (C4 Component)
+```plantuml
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+Container(api,"Backend API (FastAPI)")
+Component(auth,"Auth Module","Handles registration, login, JWT")
+Component(users,"Users Service","User profile & teams")
+Component(tasks,"Tasks Service","Task CRUD, validations, soft-delete")
+Component(assign,"Assignments Service","Creates assignment records")
+Component(notif,"Notification Adapter","Enqueues notifications")
+Component(repo,"Persistence (ORM/SQL)","SQLAlchemy + Alembic")
+Component(health,"Health & Metrics","Liveness/readiness / Prometheus metrics")
+api -> auth : REST calls
+api -> users : REST calls
+api -> tasks : REST calls
+api -> assign : REST calls
+tasks -> repo : read/write
+users -> repo : read/write
+assign -> repo : read/write
+auth -> repo : read/write
+api -> notif : enqueue
+health <- api : expose metrics
+@enduml
+```
+
+Component responsibilities and boundaries
+- Web Client (React)
+  - Responsibilities: Present UI, input validation, store short-lived JWT securely, call backend APIs, show notifications, manage session.
+  - Boundary: No direct DB or queue access. All data via API.
+- Backend API (FastAPI)
+  - Responsibilities: Authorize requests, validate, enforce business rules, persist data, enqueue notifications, return RFC-like consistent error responses.
+  - Boundary: Trusted environment, interacts with DB, queue, monitoring services.
 - Notification Worker
-  - Responsibility (separate container): Consume queue, deliver in-app & email notifications, retry with exponential backoff, persist delivery logs.
-- Persistence Layer / Repositories
-  - Responsibility: Encapsulate SQL queries, migrations, pooling.
-- Caching Layer
-  - Responsibility: Cache common read queries (e.g., recent tasks list), invalidate on write, use TTL.
-- Audit & Metrics module
-  - Responsibility: Record audit logs for actions (create/edit/delete/assign), emit metrics (Prometheus).
-- Background Jobs module
-  - Responsibility: Scheduled cleanup (soft-delete retention), digest emails (future), health-check tasks.
+  - Responsibilities: Reliable delivery of emails/in-app notifications, retries with exponential backoff, mark delivery status, log failures and metrics.
+  - Observability: record delivery metrics and errors.
+- Data stores
+  - PostgreSQL: authoritative store, ACID transactions for tasks and assignments.
+  - Redis/SQS: transient queue; Redis optionally used for caching and rate-limiting.
 
-Component interaction sequence: Create & assign task
-1. User -> API (POST /tasks) -> Task Service validates, writes Task to Postgres.
-2. If assignee provided -> Assignment Service creates Assignment row and calls Notification Enqueuer.
-3. Enqueuer pushes message to Redis queue.
-4. Notification Worker consumes, attempts delivery (email or in-app), writes delivery status to DB, emits metrics.
+7. API Design (Contracts)
+- API conventions
+  - Base path: /api/v1
+  - All endpoints HTTPS only.
+  - Authentication: Authorization: Bearer <access_token> (JWT). Access token short-lived (e.g., 15 minutes). Implement refresh tokens as HttpOnly secure cookie (recommended).
+  - Response format: JSON. Errors follow Problem Details (RFC7807) structure for consistent error codes and messages.
+  - Pagination: cursor (preferred) or limit/offset; include next_cursor, limit, total_estimate (optional).
+  - Idempotency: For critical operations (assignment), permit client-provided Idempotency-Key header.
+  - Rate limiting: 100 req/min per IP/user for auth endpoints; tuned per endpoint.
 
-Concurrency control
-- Use optimistic concurrency control via a task.version integer and conditional UPDATE ... WHERE id = X AND version = V to detect conflicting edits; return 409 on mismatch with latest resource representation.
+- Auth / User Endpoints
+  - POST /api/v1/auth/register
+    - Request:
+      { "name": "Alice", "email": "alice@example.com", "password": "P@ssw0rd!" }
+    - Response 201:
+      { "user_id": "uuid", "email": "...", "created_at": "...", "token": "<jwt>" }
+    - Errors: 400 (validation), 409 (email exists), 500
+  - POST /api/v1/auth/login
+    - Request:
+      { "email": "...", "password": "..." }
+    - Response 200:
+      { "user": { "user_id":"...", "name":"...", "email":"..." }, "token":"<jwt>", "expires_in":900 }
+    - Rate-limited: 429 for too many attempts
+  - GET /api/v1/users/me
+    - Headers: Authorization: Bearer <jwt>
+    - Response 200: current profile and team membership.
 
-5. API design (contracts)
-General
-- API style: RESTful JSON over HTTPS. All endpoints require Authorization except register/login.
-- Auth: Bearer JWT or HttpOnly Secure cookie with Access JWT; endpoints protected with OAuth2PasswordBearer semantics. Recommend short-lived access token (15 minutes) and optional refresh token (7-30 days) stored as HttpOnly refresh cookie.
-- Rate-limiting: IP & account rate limits on auth and write endpoints (e.g., 10 req/min login).
+- Task Endpoints
+  - POST /api/v1/tasks
+    - Auth required
+    - Request:
+      { "title":"...", "description":"", "priority":"low|medium|high", "assignee_id":"uuid (optional)" }
+    - Response 201:
+      { "task_id":"uuid", "title":"...", "status":"open", "created_by":"user_id", "created_at":"..." }
+    - Behavior: If assignee_id provided, validate user exists and team membership, create assignment record, enqueue notification.
+  - GET /api/v1/tasks
+    - Query params: status, assignee_id, priority, cursor, limit, sort_by
+    - Response 200: { "items":[{task}], "next_cursor":"...", "limit":50 }
+    - Performance: server-side filtering & pagination
+  - GET /api/v1/tasks/{task_id}
+    - Response 200: full task
+  - PATCH /api/v1/tasks/{task_id}
+    - Request: Partial fields (title, description, priority, status) + optional version token for optimistic concurrency
+    - Response 200: updated task
+    - Possible 403 (unauthorized), 409 (conflict)
+  - DELETE /api/v1/tasks/{task_id}
+    - Soft-delete: sets deleted_at; Response 204
+    - Authorization: creator or admin
 
-Core endpoints (essential subset)
+- Assignment Endpoints
+  - POST /api/v1/tasks/{task_id}/assign
+    - Request:
+      { "assignee_id":"uuid" }
+    - Response 201:
+      { "assignment_id":"uuid", "task_id":"...", "assignee_id":"...", "assigned_at":"..." }
+    - Behavior: Enqueue notification; handle last-writer-wins or optional versioning.
+  - GET /api/v1/users/{user_id}/assignments
+    - Returns assignments for user (with pagination)
 
-Auth
-- POST /api/v1/auth/register
-  - Request: { "name": string, "email": string, "password": string }
-  - Responses:
-    - 201 { "user_id": UUID, "email": string, "created_at": ISO8601 }
-    - 400 validation errors
-- POST /api/v1/auth/login
-  - Request: { "email": string, "password": string }
-  - Responses:
-    - 200 { "access_token": string, "token_type": "bearer", "user": { user fields } } and sets HttpOnly cookie OR returns token in body
-    - 401 invalid credentials
-- POST /api/v1/auth/logout
-  - Request: Authorization
-  - Response: 204
+- Notification Endpoints (internal / admin)
+  - GET /api/v1/notifications
+    - Query unread, limit, cursor
+  - PATCH /api/v1/notifications/{id}/mark_read
+    - Response 200
 
-Users
-- GET /api/v1/users/me
-  - Response: 200 user profile
-- GET /api/v1/teams/{team_id}/members
-  - Response: 200 list of users
+- Error model (example)
+  - 400 Bad Request
+    {
+      "type": "/errors/validation",
+      "title": "Validation Error",
+      "status": 400,
+      "detail": "Title is required",
+      "errors": { "title": ["required"] }
+    }
+  - 401 Unauthorized, 403 Forbidden, 409 Conflict, 429 Too Many Requests, 500 Internal
 
-Tasks
-- POST /api/v1/tasks
-  - Request: { "title": string, "description": string|null, "priority": "low"|"medium"|"high" (opt), "assignee_id": UUID|null }
-  - Response:
-    - 201 { "task_id": UUID, ... }
-    - 400 validation errors
-- GET /api/v1/tasks
-  - Query params: page / limit or cursor, status, assignee_id, sort (priority, created_at)
-  - Response: 200 { "items": [Task], "meta": { total, page, limit } }
-- GET /api/v1/tasks/{id}
-  - Response: 200 { Task } or 404
-- PATCH /api/v1/tasks/{id}
-  - Request: partial fields to update + optional If-Match header with version or ETag
-  - Response:
-    - 200 updated Task
-    - 403 unauthorized
-    - 409 conflict
-- DELETE /api/v1/tasks/{id}
-  - Response:
-    - 204 on success (soft-delete)
-    - 403 unauthorized
+8. Data Architecture
+- Logical schema (concise)
+  - users
+    - id (UUID PK), name, email (unique), password_hash, role (user/manager/admin), team_id, created_at, updated_at, disabled_at
+    - Index: email (unique)
+  - teams (optional)
+    - id (UUID), name, created_at
+  - tasks
+    - id (UUID), title, description, status ENUM (open,in_progress,completed,archived), priority ENUM, created_by FK users(id), assignee_id FK users(id) (nullable), created_at, updated_at, completed_at (nullable), deleted_at (nullable), version (integer)
+    - Indexes: status, created_by, assignee_id, (created_at)
+  - assignments
+    - id (UUID), task_id FK tasks(id), assignee_id FK users(id), assigned_by FK users(id), assigned_at timestamp
+    - Index: assignee_id
+  - notifications
+    - id (UUID), user_id FK, type (assignment...), payload JSONB, delivered boolean, delivery_attempts integer, last_attempt_at, created_at
+  - audit_logs
+    - id, actor_id, action, resource_type, resource_id, metadata JSONB, created_at
+- Persistence patterns
+  - Use SQL transactions for create+assign operations to ensure assignment consistent.
+  - Soft-delete by setting deleted_at; exclude by default in queries.
+  - Optimistic concurrency: tasks.version integer incremented on writes; clients can send If-Match version header to detect concurrent edits (return 409 when mismatch).
+- Backups & retention
+  - Managed DB daily backups (point-in-time recovery for 7–30 days depending on SLA)
+  - Soft-deletes retained for configurable retention window (e.g., 30 days) before permanent purge.
 
-Assignments
-- POST /api/v1/tasks/{id}/assign
-  - Request: { "assignee_id": UUID }
-  - Response:
-    - 201 { "assignment_id": UUID }
-    - 400 if assignee invalid
-    - 409 on conflicting concurrent assignment policy
-- GET /api/v1/tasks/{id}/assignments
-  - Response: 200 list
+9. Infrastructure & Deployment
+- Environments: dev, staging, prod
+- Containerization: Docker images for Backend and Worker. Frontend built as static assets.
+- CI/CD: GitHub Actions / Azure DevOps / GitLab CI pipeline
+  - Build → run unit tests → build images → push to registry → deploy to environment via IaC.
+- Deployment targets (choice; see ADRs)
+  - Recommended: AWS Fargate (ECS) or Azure Container Instances + managed RDS/Redis for MVP for fast managed operations. Alternatively AKS/EKS if Kubernetes expertise available.
+- Infrastructure as Code: Terraform for cloud resources and managed services.
+- Secrets: Managed secrets (AWS Secrets Manager / Azure Key Vault)
+- Service discovery & Load balancing: Managed load balancer (ALB / Azure Application Gateway); TLS termination at LB; enforce HTTPS.
+- Horizontal scaling
+  - API and Worker scaled by container tasks (CPU/memory and autoscaling rules)
+  - Postgres scaled vertically + read replicas if needed
+  - Queue: SQS or Redis (managed Elasticache)
+- Local dev: Docker Compose setup (Postgres, Redis, API, Worker, Frontend via dev server)
 
-Notifications (internal)
-- POST /internal/api/v1/notifications/enqueue
-  - Request: { "recipient_id": UUID, "type": "assignment", "payload": {...} }
-  - Response: 202 accepted
+10. Security Architecture
+- Authentication & Authorization
+  - JWT access tokens signed with strong key (RS256 recommended) and short expiry (~15m). Use refresh tokens as HttpOnly Secure SameSite cookies issued at login (longer-lived, revocable).
+  - Passwords hashed with Argon2id or bcrypt (work factor tuned). Store only password_hash.
+  - Account lockout and rate-limiting for auth endpoints.
+  - Authorization: RBAC minimal (creator, assignee, manager). Enforce at API layer per endpoint.
+- Transport & Network
+  - TLS 1.2+ enforced for all services and CDN.
+  - Internal services communicate over private networks (VPC/subnet). No public DB access.
+- Secrets & Keys
+  - Store in cloud KMS/Secrets Manager.
+  - Rotate keys on schedule; rotate signing keys carefully and support key versions in JWT validation.
+- Data protection
+  - Encrypt data at rest (managed DB encryption).
+  - Regular backups and point-in-time recovery.
+  - Soft-delete and audit logs to prevent accidental permanent deletion.
+- Injection & OWASP mitigation
+  - Use parameterized queries/ORM.
+  - Input validation, rate limiting, CSP headers, X-Frame-Options, secure cookies.
+- Logging & PII
+  - Do not log passwords or full JWTs.
+  - Mask/email hashing where necessary in logs.
+- Security testing
+  - Dependency scanning, SAST tools, basic dynamic scans for auth flows, third-party security review before launch.
 
-Errors and standard fields
-- Use uniform error envelope:
-  - { "error": { "code": "INVALID_INPUT", "message": "Title is required", "details": { ... } } }
-- Use HTTP status codes appropriately (4xx client, 5xx server).
+11. Observability, Monitoring & Alerting
+- Metrics
+  - Expose Prometheus metrics from API & Worker (request rates, latencies, error rates, DB pool usage, queue length, job failures).
+  - Dashboards: Grafana for system health and business metrics (tasks created, assignments queued).
+- Logging
+  - Structured JSON logs shipped to central logging (ELK or Cloud Logging). Include request IDs and trace ids.
+- Tracing
+  - Distributed tracing (OpenTelemetry) to trace request across API and worker for assignment flow.
+- Alerts
+  - High error rate, high latency (>2s median for list endpoints), queue backlog growth, failed job rate, DB connection exhaustion, low disk.
+- Health checks
+  - Readiness and Liveness endpoints. Load balancer configured to use health probes.
+- SLO & Uptime
+  - Target >=99.5% uptime for monitoring window. SLOs implemented with alert thresholds.
 
-Authentication & Authorization
-- JWT includes sub=user_id, roles, team_id, iat, exp, jti.
-- Authorization rules:
-  - Create/Edit/Delete allowed for creators or admins; assignees allowed to mark complete.
-  - Manager role: read across team.
-  - Authorization decisions enforced in API layer.
+12. Scalability and Performance Considerations
+- Expected load: 500 concurrent users. Design for horizontal scaling.
+- Performance techniques
+  - Database: proper indexing (status, created_by, assignee_id), query pagination and limits, optimistic paging.
+  - Caching: Redis for frequently-read endpoints (dashboard list) with short TTLs and cache invalidation on updates.
+  - Connection pooling: configure DB pools to match instance capacity.
+  - Backgrounding: notifications use queueing not synchronous sends.
+  - Load testing: simulate 500 concurrent users for listing/filtering endpoints; tune accordingly.
+- Concurrency controls
+  - Use optimistic locking (version) for concurrent edits; last-writer-wins only if acceptable, but recommend version-based conflict detection (409) for edits and assignment operations.
+- Bottlenecks to watch
+  - DB write spikes on assignment bursts — consider write scaling or batching.
+  - Email provider rate limits — ensure worker throttles outbound sends.
 
-6. Data architecture
-Logical data model (concise)
-- user (user_id PK UUID, name, email UNIQUE, password_hash, created_at, team_id, role, is_active)
-- team (team_id PK, name, created_at)
-- task (task_id PK UUID, title, description TEXT, status ENUM {open,in_progress,completed,archived}, priority ENUM, created_by FK->user, assignee_id FK->user nullable, assigned_at timestamp nullable, created_at, updated_at, completed_at, deleted_at, version INT)
-- assignment (assignment_id PK, task_id FK->task, user_id FK->user, assigned_by FK->user, assigned_at, reason TEXT)
-- notification (notification_id PK, recipient_id FK->user, type ENUM, payload JSONB, status ENUM {queued,sent,failed}, attempts INT, last_attempt_at)
-- audit_log (id PK, actor_id, action, resource_type, resource_id, data JSONB, created_at)
+13. Reliability & Disaster Recovery
+- Backups: daily snapshots and point-in-time recovery for DB.
+- Multi-AZ deployment for DB and compute where possible.
+- Idempotency & retries: job processing with exponential backoff and dead-letter queue for failures.
+- Restore procedure: documented restore from backup to separate cluster, alerting and failover test schedule.
 
-Indexes & constraints
-- Unique index on user.email
-- Indexes on task(created_by), task(status), task(assignee_id), assignment(user_id)
-- Partial index on task (deleted_at IS NULL) to accelerate normal queries
-- Foreign keys with ON DELETE SET NULL for assignee to preserve tasks if user removed
+14. Testing Strategy
+- Unit tests for business logic, auth, validation.
+- Integration tests against test DB/containers for API and worker.
+- End-to-end tests (Cypress) covering registration, login, create/assign/complete flows.
+- Load tests using k6 or Locust to validate 500 concurrent users and response targets.
+- Security tests: dependency vulnerability scanning and basic OWASP checks.
 
-Data retention & soft-delete
-- Soft-delete: task.deleted_at timestamp; cron job/maintenance job to permanently delete after retention period (e.g., 90 days)
-- Backups: daily full backups, point-in-time for RDS.
+15. Operational Runbook (high level)
+- Deploy rollback: CI pipeline supports rolling back to last known-good image tag and DB migrations are backward compatible.
+- Incident response: paging for severe alerts, runbooks for queue backlog, DB connection exhaustion, unhealthy workers.
+- Backup & restore playbooks maintained in repository.
 
-Sample ERD (Appendix includes diagram)
+16. Risks & Mitigations (top items from spec, with system edit)
+- Notification delivery failure
+  - Mitigation: queue with retries, fallback to in-app, monitoring on delivery metrics, dead-letter queue and alerting.
+- Security misconfig
+  - Mitigation: enforce TLS, use managed secrets, code review, security scan, limited production secrets exposure.
+- Performance under concurrent load
+  - Mitigation: load tests, caching, indexing, autoscaling rules, performance budget for endpoints.
+- Data loss
+  - Mitigation: soft-delete, backups, audit logs.
+- Timeline
+  - Mitigation: strict MVP scope, incremental delivery, prioritize FRs in Implementation Notes.
 
-7. Infrastructure & deployment
-Deployment targets
-- MVP: Docker images orchestrated via:
-  - Option A (recommended for speed & cost): AWS ECS Fargate + RDS(Postgres) + ElastiCache Redis + SES; or Azure equivalents (ACR + AKS/Managed SQL + Redis).
-  - Option B (dev/local): Docker Compose for local and test environments.
-- CI/CD: GitHub Actions (or GitLab CI) building images, running tests, scanning dependencies, pushing to container registry, deploying via IaC (Terraform or ARM/Bicep) to target cloud.
+17. Implementation Plan & Prioritization (MVP)
+- Sprint 1: Project scaffolding, CI/CD, infra IaC (dev), user registration/login (FR-001, FR-002), DB schema
+- Sprint 2: Task create/list/view (FR-003, FR-008), pagination/filtering base (FR-009 minimal)
+- Sprint 3: Assignment & Notifications (FR-004, FR-010) — queue and worker
+- Sprint 4: Complete/edit/delete flows (FR-005, FR-006, FR-007), optimistic concurrency, soft-delete
+- Sprint 5: Observability, load testing, security hardening, staging verification, production deployment
 
-Infrastructure components
-- Container registry: ECR/ACR
-- App servers: ECS Fargate tasks or AKS pods (FastAPI + workers)
-- Frontend hosting: S3 + CloudFront (or Azure Static Web Apps) for static assets
-- DB: Managed Postgres (RDS/Azure DB) multi-AZ
-- Redis: Managed ElastiCache / Azure Cache for Redis
-- Secrets manager: AWS Secrets Manager / Azure Key Vault
-- SMTP: SES or external SMTP
-- Observability: Prometheus/Grafana for metrics, Loki/ELK for logs, Jaeger for traces
-- Load balancer & TLS: ALB/ALB with ACM-managed certs or Azure Application Gateway, enforce HTTPS
+18. Technology Stack (Rationale)
+- Frontend: React (fast developer productivity, ecosystem), build to static assets served via CDN
+- Backend: FastAPI (Python) — high productivity, async support, type hints, good for quick MVP; aligns with OpenAPI generation
+- Database: PostgreSQL (managed RDS / Azure DB) — ACID, JSONB for notification payloads, reliable backups
+- Background jobs & queue: RQ (Redis) or Celery (RabbitMQ/Redis) or managed SQS + Lambda for simpler ops. Recommended: AWS SQS + AWS Lambda or small worker pool with RQ/Redis for MVP. Choice recorded in ADR.
+- Caching & rate-limiting: Redis (managed Elasticache or Azure Cache)
+- Containerization & Orchestration: Docker, deploy to AWS ECS/Fargate or Azure Container Instances for speed; use Kubernetes (EKS/AKS) only if team has maturity.
+- Email: AWS SES or external SMTP provider
+- Observability: Prometheus + Grafana, OpenTelemetry tracing, Sentry for error tracking
+- IaC: Terraform
+Rationale: Stack prioritizes developer speed, open-source components, and managed services for operational simplicity given 3-month timeline.
 
-Deployment pattern
-- Blue/green or rolling updates for backend services
-- Health checks (liveness/readiness) for all pods/containers
-- Autoscaling policies: CPU/memory and custom metrics (queue length) triggers
+19. Architecture Decision Records (ADRs)
+ADR-001: Backend Framework: FastAPI chosen
+- Status: Accepted
+- Context: Need quick MVP, async I/O for IO-bound operations (DB, email), OpenAPI support.
+- Decision: Use FastAPI (Python) + uvicorn.
+- Alternatives: Node.js/Express, Django, Go.
+- Rationale: Fast development, type-safety, async support, good ecosystem for background workers, aligns with team skillset assumption.
+- Consequences: Leverage Python tooling; ensure concurrency tuning (uvicorn workers + gunicorn if needed).
 
-Container resource sizing (initial)
-- API: 2 vCPU, 2GB RAM × 2 replicas
-- Worker: 1 vCPU, 1GB RAM × 1-2 (scale with queue)
-- Redis: cache.t3.medium equivalent with replica for read
-- Postgres: db.t3.medium equivalent with multi-AZ
+ADR-002: Authentication: JWT access tokens + refresh tokens
+- Status: Accepted
+- Context: Requirement: short-lived JWT, secure login.
+- Decision: Issue short-lived signed JWT (RS256) for API access; use HttpOnly secure refresh tokens in cookie for session renewal.
+- Alternatives: Stateful sessions, OAuth provider.
+- Rationale: Stateless scaling, aligns with RESTful API and simple frontend.
+- Consequences: Need secure key management, token revocation strategy (maintain refresh token revocation store).
 
-Network & VPC
-- Private subnets for DB/Redis; public subnets for load balancer and NAT.
-- Security groups restricting access.
-- Use TLS for all external/intra-service traffic.
+ADR-003: Notification Queue: Managed SQS vs Redis/RQ
+- Status: Accepted (SQS recommended on AWS; Redis/RQ alternative for faster local dev)
+- Context: Need reliable queue for notifications with retries and dead-letter handling.
+- Decision: Use AWS SQS (managed) in production; Redis + RQ for local/dev and small-scale deployments.
+- Alternatives: Celery + RabbitMQ, direct SMTP synchronous sends.
+- Rationale: SQS removes operational burden, supports scaling and DLQ. RQ enables fast local iterations and simple worker model.
+- Consequences: Production operations simplified; must abstract queue layer to swap provider.
 
-8. Security architecture
-Security principles applied
-- Least privilege, defense-in-depth, secure defaults, explicit whitelist-based network rules, input validation and sanitization, rate limiting, audit trails.
+ADR-004: Deployment Target: Managed containers (AWS Fargate / Azure Container Instances)
+- Status: Accepted
+- Context: Need deployable on AWS/Azure and low ops overhead for MVP.
+- Decision: Use AWS Fargate (ECS) or Azure Container Instances / App Service for containers. If Kubernetes expertise exists, use EKS/AKS later.
+- Alternatives: Full Kubernetes, serverless (Lambda)
+- Rationale: Faster to deliver, managed autoscaling, less cluster ops.
+- Consequences: Simpler operational model; if complex routing/sidecars needed later, may require migration.
 
-Authentication & tokens
-- Password hashing: Argon2id preferred, fallback bcrypt with high work factor if Argon2 not available.
-- Access tokens: short-lived (15 minutes) JWT signed with asymmetric keys (RS256) or rotating secrets; use refresh tokens (longer-lived) stored in secure HttpOnly SameSite cookies.
-- Store secrets in managed secrets store.
+ADR-005: Data Model: Soft-delete + optimistic concurrency
+- Status: Accepted
+- Context: Requirement: soft-delete, audit logs, concurrency conflict handling.
+- Decision: Implement deleted_at soft-delete and integer version field for optimistic locking. Return 409 on version mismatch.
+- Alternatives: Hard delete, DB MVCC strategies
+- Rationale: Prevent accidental data loss, allow recovery; versioning handles concurrency conflicts elegantly.
+- Consequences: Queries must filter deleted_at IS NULL by default; migrations for purge jobs.
 
-Session storage & cookie policy
-- Recommend HttpOnly, Secure, SameSite=Strict for cookies. If SPA needs token in JS, use a pattern with refresh cookie and backend endpoint to mint access token; otherwise, prefer cookie-based session to reduce XSS risk.
+ADR-006: Password hashing algorithm
+- Status: Accepted
+- Context: Security requirements
+- Decision: Use Argon2id with reasonable parameters; fallback to bcrypt if Argon2 not available.
+- Alternatives: bcrypt, scrypt.
+- Rationale: Argon2id recommended by contemporary standards for password hashing.
+- Consequences: Need to manage dependencies and tune memory/iterations for deployment environment.
 
-Transport & storage
-- Enforce HTTPS/TLS v1.2+; HSTS header.
-- Sensitive data at rest: DB encrypted (managed service encryption). Backups encrypted.
-- No logging of plaintext passwords or secrets; mask PII in logs.
-
-OWASP protections
-- Input validation with Pydantic schemas.
-- CSRF protection for cookie-based auth (double-submit or CSRF tokens).
-- XSS mitigation: escape outputs in frontend; use Content Security Policy (CSP).
-- SQL injection: use parameterized queries/ORM (SQLAlchemy core/ORM).
-- Rate limiting: on auth endpoints and abusive write endpoints.
-- Brute-force: account lockout + exponential backoff.
-
-Secrets & keys
-- Store JWT signing keys and DB passwords in Secrets Manager or Key Vault. Use IAM roles for services.
-
-Data access & permissions
-- Database user only with necessary privileges.
-- Apply RBAC (users, managers, admins) at API level. Record authorizations in audit_log.
-
-Security testing
-- Dependency vulnerability scans in CI.
-- Static Application Security Testing (SAST) and baseline dynamic checks (DAST).
-- Pen-test prior to GA.
-
-9. Observability, logging, and monitoring
-- Metrics: instrument FastAPI and workers with Prometheus client; key metrics: request latency, error rates, DB query times, queue length, notification delivery times.
-- Tracing: OpenTelemetry instrumentation for distributed traces; Jaeger or managed tracing.
-- Logs: Structured JSON logs, include request_id/correlation_id. Forward to centralized log storage (CloudWatch Logs/Elastic/Loki).
-- Alerts: Configure alerts for high error rate, high latency, queue backlog > threshold, DB failover, instance health.
-- Health: /health/live and /health/ready endpoints for containers.
-- Dashboards:
-  - API latency P95/P99, error rate, throughput
-  - Queue depth and worker throughput
+20. Appendix
+- Sample infrastructure components
+  - AWS: VPC, ALB, ECS Fargate (API & Worker), RDS Postgres, ElastiCache Redis (dev), SQS, SES, CloudWatch, Secrets Manager.
+  - Azure: Virtual Network, Application Gateway, Azure Container Instances/AKS, Azure Database for PostgreSQL, Azure Cache for Redis, Service Bus, SendGrid or SMTP, Azure Monitor, Key Vault.
+- Local dev stack (Docker Compose)
+  - services: api, worker, postgres, redis, web (dev server)
+- CI/CD: include migrations run step (Alembic) with automated dry-run on staging and manual approval for prod migrations.
+- Sample metrics to monitor
+  - API request latency (p95, p99)
+  - Task list endpoint median latency
+  - Queue depth and job failure rate
+  - DB connections used
+  - Auth failures / brute-force patterns
   - Notification delivery success rate
-  - Database connections and slow queries
 
-10. Scalability, availability & performance plan
-Stateless services
-- API servers are stateless allowing horizontal scaling behind load balancer.
+21. Implementation Checklist (MVP)
+- [ ] IaC skeleton and dev environment
+- [ ] Auth registration & login (tests)
+- [ ] User model and teams
+- [ ] Task CRUD and listing with pagination (tests)
+- [ ] Assignment endpoint and persistence (tests)
+- [ ] Notification queue + worker + email/in-app delivery
+- [ ] Soft-delete + audit logs
+- [ ] Rate limiting on auth endpoints
+- [ ] Observability (metrics/logging/tracing)
+- [ ] Load testing and performance tuning
+- [ ] Security scanning and basic pentest checklist
+- [ ] Production deployment & monitoring with alerts
 
-Caching strategy
-- Use Redis for caching task list fragments (team-level dashboards) with short TTL (30s-120s) and invalidate on writes.
-- Client-side caching and pagination to reduce server load.
+22. Glossary
+- JWT: JSON Web Token
+- DLQ: Dead Letter Queue
+- SLO: Service Level Objective
+- RBAC: Role-Based Access Control
+- RQ/Celery: Python background job frameworks
 
-Queue & worker scaling
-- Monitor queue length; autoscale workers based on backlog and delivery SLA (1 minute target for assignment notifications).
+End of Architecture Design Document
 
-Database scaling & partitioning
-- Initial: single primary with read replicas if necessary.
-- Use connection pooling (pgbouncer) to avoid overloading DB with many connections.
-- Indexes to support frequent filters (status, assignee, created_by). Use pagination with cursor-based approach when large datasets likely.
-
-Performance testing
-- Load-test GET /tasks with 500 concurrent simulated users; tune DB indexes, cache, and query plans.
-- Use query plan analysis to optimize.
-
-Availability & backup
-- Multi-AZ DB, auto-failover; worker health checks and restarts; backups daily + PITR.
-
-11. Testing strategy & CI/CD
-Testing
-- Unit tests for business logic (pytest).
-- Integration tests for DB and queue interactions (use ephemeral containers).
-- End-to-end UI tests (Cypress) covering register/login/create/assign/dashboard flows.
-- Load testing (k6 or Locust) to simulate 500 concurrent users focusing on task list endpoints.
-- Security checks (dependency scan, SAST) integrated into CI.
-
-CI/CD
-- Build pipeline:
-  - Lint + tests -> Build container images -> Security scans -> Push to registry -> Deploy to staging -> Run automated E2E tests -> Manual approval -> Deploy to production.
-- Use feature flags for toggling non-MVP features.
-
-12. Operational runbook & backup/recovery
-Operational runbook (key actions)
-- Deploy: CI/CD automated; rollback triggers via previous image.
-- Incident: Alert -> On-call notified -> create incident ticket -> use /health endpoints to isolate service -> scale workers or DB read replica promotion if needed.
-- DB restore: Restore from latest backup or PITR; follow documented recovery steps.
-- Soft-delete recovery: Admin endpoint to list soft-deleted tasks and restore within retention window.
-
-Backups & retention
-- Daily snapshots retained 30 days, point-in-time recovery for 7 days (configurable).
-- Soft-delete retention for user-visible restore: 90 days.
-
-13. Technology stack rationale
-- Frontend: React — leverage team familiarity; fast to deliver responsive SPA.
-- Backend: FastAPI (Python) — rapid development, Pydantic validation, asynchronous support, good performance.
-- Data store: PostgreSQL — ACID, open-source, powerful JSONB for flexible payloads.
-- Cache/queue: Redis — open-source, supports caching, simple RQ/Celery, and low operational overhead for MVP.
-- Notification worker: Python Celery or RQ (choose RQ for minimal complexity; Celery if scheduling/ack/delivery features needed).
-- Containerization: Docker — required by spec; orchestrate with ECS Fargate / AKS.
-- Observability: Prometheus + Grafana; OpenTelemetry for traces.
-- Email: AWS SES (recommended) or SMTP provider fallback.
-Rationale: All choices favor open-source and speed-to-deliver, align with team skill assumptions and constraints.
-
-14. Risks & mitigations (top recapped)
-- Timeline/Scope creep: Strict MVP scope, weekly milestones.
-- Notification delivery failures: Queue with retries, fallback in-app notifications, monitoring.
-- Security misconfig: Security review and automated checks; enforce strong password policy and secrets management.
-- Performance at 500 concurrent users: caching, pagination, load testing, and autoscaling.
-- Data loss: Soft-delete, backups, and audit logs.
-
-15. Architecture Decision Records (ADRs)
-ADR-001: Tech stack: FastAPI + React + Postgres + Redis
-- Status: Accepted
-- Context: Need rapid delivery with open-source stack, good performance, async handling for notifications.
-- Decision: Use FastAPI for backend, React for frontend, PostgreSQL for persistence, Redis for cache/queue.
-- Consequences: Fast development & easy Dockerization; team must implement async worker pattern.
-
-ADR-002: Token storage & session strategy
-- Status: Accepted
-- Context: Security tradeoffs between localStorage (XSS risk) and HttpOnly cookies (CSRF).
-- Decision: Use short-lived access JWTs and HttpOnly Secure SameSite cookies for auth; implement CSRF protection if cookies are used.
-- Consequences: Less XSS exposure; requires CSRF mitigations and cookie-aware setup for SPA.
-
-ADR-003: Notification queue: Redis RQ (or Celery)
-- Status: Accepted
-- Context: Need reliable queued notifications and Docker deployment flexibility.
-- Decision: Use Redis as broker and RQ for simple worker semantics; migrate to SQS + Lambda/Celery later if required.
-- Consequences: Simpler MVP operations; may need to refactor if high volume or cloud-native scaling required.
-
-ADR-004: Soft-delete for tasks
-- Status: Accepted
-- Context: Avoid accidental data loss and support recovery & audit.
-- Decision: Implement soft-delete via deleted_at timestamp and plan scheduled permanent purge after retention window.
-- Consequences: Additional query filters required; retention policy must be enforced.
-
-ADR-005: Concurrency control
-- Status: Accepted
-- Context: Need deterministic behavior on concurrent edits and assignments.
-- Decision: Use optimistic concurrency via version field and conditional updates; last-writer-wins avoided to favor explicit conflict detection with 409 responses.
-- Consequences: UI will handle 409 by fetching latest and prompting user to retry/merge.
-
-16. Appendix
-
-PlantUML diagrams (component-level)
-- C4 Context & Container diagrams provided earlier.
-- Component diagram (simplified)
-```plantuml
-@startuml
-package "API Backend (FastAPI)" {
-  [HTTP Layer] --> [Auth Module]
-  [HTTP Layer] --> [Task Service]
-  [HTTP Layer] --> [Assignment Service]
-  [Task Service] --> [Persistence / Repositories]
-  [Assignment Service] --> [Notification Enqueuer]
-  [Notification Enqueuer] --> Redis
-  [Persistence / Repositories] --> Postgres
-}
-package "Workers" {
-  [Notification Worker] --> Redis
-  [Notification Worker] --> Email Provider
-  [Notification Worker] --> Postgres (write delivery logs)
-}
-@enduml
-```
-
-ERD (textual)
-- user (user_id PK) 1..* — tasks.created_by FK
-- task (task_id PK) 1..* — assignment.task_id FK
-- user 1..* — assignment.user_id FK
-
-Operational checklist for MVP launch
-- Implement core FRs (001,002,003,004,006,008,010)
-- Set up managed Postgres and Redis
-- Configure TLS and domain + DNS
-- Implement CI/CD pipeline, unit/integration tests
-- Configure observability and alerts
-- Run load tests and security scans
-- Security review & privacy checklist
-
-Open questions / next steps (to resolve pre-implementation)
-- Finalize team membership model (is team created on first user or via admin?). Required to validate assignment authorization.
-- Confirm cookie vs token client storage policy (org preference). Implementation uses cookie approach by default.
-- Decide delivery SLA for notification (1-minute target) under what load—document scaling triggers.
-
-Contact & ownership
-- Architecture owner: Senior Solutions Architect
-- Implementation lead: Product Engineer (to be assigned)
-- Security owner: Security Engineer
-
-End of document.
+If you want, I can:
+- Produce PlantUML PNG/SVG renderables for C4 diagrams,
+- Generate OpenAPI (Swagger) skeleton for the API endpoints above,
+- Produce Terraform snippets for the recommended AWS deployment,
+- Or a sample Postgres schema SQL and migration (Alembic) for the data model.
