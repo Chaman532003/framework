@@ -1,387 +1,675 @@
 ---
-post_title: "TaskFlow Requirements Specification"
-author1: "Product Analyst"
-post_slug: "taskflow-requirements-spec"
-microsoft_alias: "product.analyst"
-featured_image: ""
-categories: ["Product", "Requirements"]
-tags: ["TaskFlow", "requirements", "BRD", "spec"]
-ai_note: "GenAI triage executed; no AI-specific features identified"
-summary: "Functional requirements and use cases for TaskFlow — a lightweight team task management web app. Includes FR-XXX statements, acceptance criteria, use case analysis, PlantUML diagrams, risks, constraints, and evaluation."
-post_date: 2026-03-13
+title: "TaskFlow – Product Specification"
+author: "Product Management"
+date: 2026-03-13
 ---
 
-## Requirements Specification
+# Executive summary (Goal: current vs desired state)
 
-## Feature Goal
-Current state: Small teams use email and spreadsheets to track tasks, causing fragmentation, missed assignments, and low visibility.
+Current state:
+- Small teams today track tasks using email or spreadsheets causing lost context, missing accountability, and poor visibility.
 
-Desired state: A lightweight web application (TaskFlow) enabling small teams to register, create, assign, edit, track, and notify about tasks through a simple, responsive dashboard—reducing email/spreadsheet dependency and improving accountability.
+Desired state:
+- TaskFlow is a lightweight web application that allows teams to register, create, assign, edit, track, filter, and delete tasks with a simple dashboard and a basic notification system — enabling clear accountability and improved team productivity.
 
-## Business Justification
-- Improve team productivity by centralizing task management and visibility.
-- Enable managers to track progress and accountability with minimal overhead.
-- Reduce time lost to coordination by replacing email/spreadsheets.
-- Low-cost, rapid delivery using open-source stack (React, FastAPI, PostgreSQL, Docker) to meet a 3-month timebox.
+Why this spec exists:
+- Translate the BRD into testable, implementable functional and non-functional requirements, use cases (with PlantUML diagrams), success metrics, constraints, and assumptions so development can deliver the initial release within the stated timeline and technology constraints.
 
-## Feature Scope
-User-visible behavior:
-- Users can register, authenticate, and manage tasks (create, assign, edit, complete, delete).
-- Dashboard shows tasks across team with filtering and simple notification delivery when assignments occur.
-Technical requirements:
-- JWT-based auth, HTTPS-only, password hashing, responsive UI for desktop/tablet, backend APIs with <2s response time target.
-- Support ~500 concurrent users; deployable via Docker on AWS/Azure.
+---
 
-### Success Criteria
-- [ ] Registered users can perform full CRUD on tasks within the UI.
-- [ ] Assigned users receive notifications within 1 minute of assignment (simple queue/email/webhook).
-- [ ] Dashboard lists and filters tasks; API responses for list endpoints return within 2 seconds under normal load.
-- [ ] Deployment completed and running with >=99.5% uptime during monitoring window.
-- [ ] Adopted by at least 80% of target users in pilot group.
+## Why (Business value, problems solved, integrations)
 
-## Functional Requirements
+Business value:
+- Centralizes task management to improve team productivity and accountability.
+- Reduces reliance on email/spreadsheets for tracking tasks.
+- Enables managers to monitor task progress and surface blockers.
 
-Before expansion, list of FRs to generate:
+Problems solved:
+- Unclear ownership of tasks.
+- Tasks getting lost in email threads or spreadsheets.
+- No single source of truth for team tasks.
+
+Primary integrations (scope/in-scope):
+- Authentication: JWT-based authentication service (internal).
+- Database: PostgreSQL for persistence.
+- Notifications: Simple in-app and optional email notifications (SMTP) for assigned tasks.
+- Deployment: Docker container images deployed to AWS or Azure.
+
+Out-of-scope (carried from BRD):
+- Advanced analytics, AI suggestions, mobile apps, external project-management tool integrations.
+
+---
+
+## What (User-visible behavior and success criteria)
+
+High-level user-visible behaviours:
+- Users can register and log in.
+- Authenticated users can create tasks and set title, description, priority, status.
+- Authenticated users can assign tasks to team members and receive notifications on assignment.
+- Users can edit and delete tasks they created (or managers depending on authorization).
+- Dashboard shows all tasks for the user's team with filtering by status and basic pagination.
+- Notifications surface assignment events in-app and optionally via email.
+
+Top-level success criteria (measurable):
+- Initial release supports ≥ 500 concurrent users (NFR1).
+- Median API response time for typical endpoints ≤ 500 ms; 95th percentile < 2 s (NFR2).
+- Uptime ≥ 99.5% (NFR3).
+- 80% adoption rate among target users within agreed pilot period (BRD success criteria).
+
+---
+
+## Requirements to generate (FR-ID | Summary)
 
 | FR-ID | Summary |
 |-------|---------|
-| FR-001 | User registration / account creation |
-| FR-002 | Secure login / authentication |
-| FR-003 | Create new tasks |
-| FR-004 | Assign tasks to team members |
-| FR-005 | Edit existing tasks |
-| FR-006 | Mark tasks as completed |
-| FR-007 | Delete tasks |
-| FR-008 | Dashboard: display all tasks |
+| FR-001 | User registration (create account) |
+| FR-002 | Secure user login (JWT) |
+| FR-003 | Create a new task |
+| FR-004 | Assign task to team member |
+| FR-005 | Edit an existing task |
+| FR-006 | Mark task as completed |
+| FR-007 | Delete a task |
+| FR-008 | Dashboard showing all tasks |
 | FR-009 | Filter tasks by status |
 | FR-010 | Notifications when tasks are assigned |
 
-Expanded Functional Requirements (each includes actor, trigger, success, failure, acceptance criteria). All requirements below marked with GenAI triage tags per initial scan.
-
-- FR-001: [DETERMINISTIC] System MUST allow users to register and create an account.
-  - Who: Prospective End User
-  - Trigger: User submits registration form (name, email, password).
-  - Success Outcome: New user record created, email uniqueness enforced, password stored as secure hash, user redirected to onboarding/dashboard with a JWT session.
-  - Failure Scenarios: Duplicate email → error; weak password → validation error; DB failure → graceful error message and retry guidance.
-  - Acceptance Criteria:
-    - API returns 201 with user_id on success.
-    - Passwords stored hashed (see NFR4).
-    - Registration validates email format and uniqueness.
-    - Validation errors return clear messages and HTTP 4xx codes.
-
-- FR-002: [DETERMINISTIC] System MUST allow users to log in securely.
-  - Who: Registered User
-  - Trigger: User submits credentials.
-  - Success Outcome: Valid credentials produce a short-lived JWT; client stores token (secure cookie/localStorage per policy) and gains access to protected endpoints.
-  - Failure Scenarios: Invalid credentials → 401; locked account → 403 with explanation; brute-force attempts mitigated by rate-limiting.
-  - Acceptance Criteria:
-    - Successful login returns JWT and user profile.
-    - Failed login returns 401 without leaking existence details.
-    - Rate limiting applied to auth endpoints.
-
-- FR-003: [DETERMINISTIC] System MUST allow users to create new tasks.
-  - Who: Authenticated User
-  - Trigger: User submits task creation form (title, description, optional priority, optional assignee).
-  - Success Outcome: Task persisted with metadata (created_by, created_at, status=Open).
-  - Failure Scenarios: Validation errors (missing title) → 4xx; DB failure → 5xx.
-  - Acceptance Criteria:
-    - POST /tasks returns 201 with task_id.
-    - Task fields validated; default status set.
-    - Created_by recorded as the requesting user.
-
-- FR-004: [DETERMINISTIC] System MUST allow users to assign tasks to team members.
-  - Who: Authenticated User (assigner)
-  - Trigger: Assigner selects user from team and assigns a task.
-  - Success Outcome: Assignment record created, task.assignee updated, assigned_at timestamp set, notification triggered.
-  - Failure Scenarios: Assignee not found or not in same team → 4xx; race condition on concurrent assignments resolved deterministically (last-writer-wins or guarded by versioning).
-  - Acceptance Criteria:
-    - POST /tasks/{id}/assign creates Assignment record with assignment_id.
-    - Notification (email/in-app) is queued and tracked for delivery.
-
-- FR-005: [DETERMINISTIC] System MUST allow users to edit existing tasks.
-  - Who: Authenticated User (task creator or assignee if permitted)
-  - Trigger: User submits task edit with allowed fields.
-  - Success Outcome: Task updated with audit fields (updated_by, updated_at).
-  - Failure Scenarios: Unauthorized edit → 403; conflicting concurrent edits → returning 409 with guidance.
-  - Acceptance Criteria:
-    - PATCH /tasks/{id} returns 200 and updated resource.
-    - Authorization check enforces edit rules (creator and/or assigned members).
-
-- FR-006: [DETERMINISTIC] System MUST allow users to mark tasks as completed.
-  - Who: Authenticated User (assignee or creator per business rule)
-  - Trigger: User toggles status to "Completed".
-  - Success Outcome: Task.status updated, completed_at recorded, optional notification to creator/manager.
-  - Failure Scenarios: Unauthorized user → 403; DB error → 5xx.
-  - Acceptance Criteria:
-    - Status change persisted; completed_at present; UI updates to reflect completion.
-
-- FR-007: [DETERMINISTIC] System MUST allow users to delete tasks.
-  - Who: Authenticated User (creator or admin)
-  - Trigger: User requests deletion.
-  - Success Outcome: Task soft-deleted (recommended) and excluded from default dashboard; deletion audit recorded.
-  - Failure Scenarios: Unauthorized → 403; attempt to delete tasks with constraints (e.g., archived) → 4xx.
-  - Acceptance Criteria:
-    - DELETE /tasks/{id} returns 204 on success.
-    - Soft-delete flag (deleted_at) set; data retained for recovery within retention window.
-
-- FR-008: [DETERMINISTIC] System MUST display a dashboard of all tasks.
-  - Who: Authenticated User
-  - Trigger: User opens dashboard route.
-  - Success Outcome: Dashboard returns paginated list of tasks visible to user (team-scoped), with status, priority, assignee, and basic filters.
-  - Failure Scenarios: Query parameter misuse → sanitized; large result sets paginated; DB timeout → 5xx with retry guidance.
-  - Acceptance Criteria:
-    - GET /tasks supports pagination (limit/offset or cursor), sorts by priority/created_at, and returns within NFR response targets.
-
-- FR-009: [DETERMINISTIC] System MUST allow users to filter tasks by status.
-  - Who: Authenticated User
-  - Trigger: User selects status filter in UI.
-  - Success Outcome: Dashboard list reflects filter (e.g., Open, In Progress, Completed).
-  - Failure Scenarios: Unsupported filter → 400; empty result set handled gracefully.
-  - Acceptance Criteria:
-    - Filtering implemented server-side e.g., GET /tasks?status=completed.
-    - UI shows "no tasks" state when results empty.
-
-- FR-010: [DETERMINISTIC] System MUST notify users when tasks are assigned to them.
-  - Who: Assigned User (recipient)
-  - Trigger: Assignment created (FR-004).
-  - Success Outcome: Notification queued & delivered (email or in-app). Delivery status tracked; retry logic for transient failures.
-  - Failure Scenarios: Email delivery failure → log and retry; recipient without email → fallback to in-app notification.
-  - Acceptance Criteria:
-    - Notification event generated on assignment creation.
-    - Delivery logged; UI displays unread notifications count.
-
-**Note**: All FRs above are deterministic—no AI candidate features were identified in the provided BRD.
-
-## Use Case Analysis
-
-### Actors & System Boundary
-- Primary Actor: Registered User — creates, assigns, edits tasks, views dashboard.
-- Secondary Actor: Manager (subset of Registered User) — monitors team progress, may have additional permissions.
-- System Actor: Auth Service (JWT provider), Notification Service (email/in-app queue), Database (PostgreSQL), External Email Provider (SMTP/SES).
-- System Boundary: TaskFlow Web Application (Frontend + Backend APIs + Notification subsystem).
-
-### Use Case Specifications
-
-#### UC-001: Register & Authenticate
-- Actor(s): Prospective User
-- Goal: Create an account and gain authenticated access.
-- Preconditions: None.
-- Success Scenario:
-  1. User navigates to Register page and submits registration form.
-  2. System validates input and creates user record.
-  3. System hashes password and stores user.
-  4. System issues JWT and redirects user to dashboard.
-- Extensions/Alternatives:
-  - 2a. Email already exists → Show error and suggest password recovery.
-  - 3a. Weak password → Show password policy guidance.
-- Postconditions: User account created; user authenticated session established.
-
-Use Case Diagram
-```plantuml
-@startuml
-left to right direction
-actor "Prospective User" as User
-rectangle "TaskFlow Application" {
-  usecase (Register) as R
-  usecase (Login) as L
-}
-User --> R
-User --> L
-R ..> L : <<include>>
-@enduml
-```
-
-#### UC-002: Create & Assign Task
-- Actor(s): Registered User (creator)
-- Goal: Create a task and optionally assign it to a team member.
-- Preconditions: User authenticated; team membership established.
-- Success Scenario:
-  1. User opens Create Task form and fills title, description, priority.
-  2. Optionally selects assignee from team list.
-  3. System validates input and creates Task record.
-  4. If assignee selected, system creates Assignment record and triggers notification.
-  5. System returns created task and updates dashboard view.
-- Extensions/Alternatives:
-  - 2a. Assignee not in team → validation error.
-  - 4a. Notification service temporarily unavailable → queue notification for retry.
-- Postconditions: Task and optional assignment persisted; notification queued.
-
-Use Case Diagram
-```plantuml
-@startuml
-left to right direction
-actor "Registered User" as User
-rectangle "TaskFlow Application" {
-  usecase (Create Task) as CT
-  usecase (Assign Task) as AT
-}
-User --> CT
-CT ..> AT : <<include>>
-AT -> "Notification Service" : queue notification
-CT --> "Database" : persist task
-@enduml
-```
-
-#### UC-003: Edit / Complete / Delete Task
-- Actor(s): Registered User (creator/assignee), Manager (if permissions)
-- Goal: Modify task details, mark complete, or remove task.
-- Preconditions: User authenticated and authorized to act on task.
-- Success Scenario:
-  1. User selects task and chooses Edit/Complete/Delete.
-  2. For Edit: User submits changes; system validates and updates task with audit info.
-  3. For Complete: User sets status to Completed; system records completed_at and notifies creator.
-  4. For Delete: User confirms; system performs soft-delete and records action.
-- Extensions/Alternatives:
-  - 2a. Concurrent edit detected → system returns 409 with latest resource and merge guidance.
-  - 3a. Unauthorized attempt → 403.
-- Postconditions: Task updated/completed/deleted and audit trails present.
-
-Use Case Diagram
-```plantuml
-@startuml
-left to right direction
-actor "User (Creator/Assignee)" as User
-rectangle "TaskFlow Application" {
-  usecase (Edit Task) as ET
-  usecase (Mark Complete) as MC
-  usecase (Delete Task) as DT
-}
-User --> ET
-User --> MC
-User --> DT
-ET --> "Database" : update task
-MC --> "Database" : update status
-DT --> "Database" : soft-delete
-@enduml
-```
-
-#### UC-004: View Dashboard & Filter Tasks
-- Actor(s): Registered User
-- Goal: See team tasks and quickly filter by status or priority.
-- Preconditions: User authenticated.
-- Success Scenario:
-  1. User opens Dashboard.
-  2. System fetches paginated tasks scoped to user's team with default sort.
-  3. User applies filter (status/priority); system returns filtered results.
-- Extensions/Alternatives:
-  - 2a. Large dataset → use cursor pagination; UI displays loading state.
-  - 3a. Unsupported filter → 400.
-- Postconditions: Dashboard displays relevant tasks.
-
-Use Case Diagram
-```plantuml
-@startuml
-left to right direction
-actor "Registered User" as User
-rectangle "TaskFlow Application" {
-  usecase (View Dashboard) as VD
-  usecase (Filter Tasks) as FT
-}
-User --> VD
-VD ..> FT : <<include>>
-VD --> "Database" : query tasks
-@enduml
-```
-
-#### UC-005: Receive Assignment Notification
-- Actor(s): Assigned User
-- Goal: Be informed when a task is assigned to the user.
-- Preconditions: Assignment record exists; user contact info available.
-- Success Scenario:
-  1. Assignment created triggers notification event.
-  2. Notification Service enqueues delivery (email or in-app).
-  3. Recipient receives notification; UI shows unread notification badge.
-- Extensions/Alternatives:
-  - 2a. Email provider transient failure → retry with exponential backoff.
-  - 2b. User has no email on file → rely on in-app notifications only.
-- Postconditions: Notification logged; recipient aware of assignment.
-
-Use Case Diagram
-```plantuml
-@startuml
-left to right direction
-actor "Assigned User" as User
-rectangle "TaskFlow Application" {
-  usecase (Assignment Notification) as AN
-}
-AN --> "Notification Service" : enqueue
-"Notification Service" --> "Email Provider" : send email
-"Notification Service" --> User : in-app notification
-@enduml
-```
-
-## Risks & Mitigations (Top 5)
-- Risk: Tight 3-month timeline may cause scope creep.
-  - Mitigation: Strict MoSCoW prioritization; deliver MVP with core flows; defer analytics/integrations.
-- Risk: Notification delivery failures impact UX.
-  - Mitigation: Implement queued retries, fallback in-app notifications, and monitoring/alerts.
-- Risk: Auth/security misconfigurations (data breach).
-  - Mitigation: Enforce HTTPS, secure JWT handling, password hashing (bcrypt/argon2), security review before launch.
-- Risk: Performance under concurrent load (500 users).
-  - Mitigation: Define performance budget, implement pagination, caching, and scale via container orchestration; load test pre-release.
-- Risk: Data loss or accidental deletion.
-  - Mitigation: Use soft-delete, retention/backup policies, and audit logs for critical actions.
-
-## Constraints & Assumptions (Top 5)
-- Constraint: Initial release must be delivered within 3 months.
-- Constraint: Prefer open-source technologies to minimize costs.
-- Constraint: Support at least 500 concurrent users (NFR1).
-- Assumption: Teams have fewer than 50 members — scoping ownership and UI assumptions.
-- Assumption: No mobile app; responsive design covers tablets and desktops only.
+AI triage (Phase 0 GenAI suitability): All features are deterministic; no AI candidate behavior detected.
+- All FRs tagged: [DETERMINISTIC]
 
 ---
 
-## Data Model (Concise)
-- User(user_id PK, name, email UNIQUE, password_hash, created_at)
-- Task(task_id PK, title, description, status, priority, created_by FK->User, created_at, updated_at, deleted_at)
-- Assignment(assignment_id PK, task_id FK->Task, user_id FK->User, assigned_at)
+# Functional Requirements (FR-XXX)
 
-Indexing & constraints:
-- Index on Task(created_by), Task(status), Assignment(user_id).
-- Foreign keys enforce referential integrity; soft-delete preserved.
+Notes:
+- Each FR uses MUST for required behavior and measurable acceptance criteria.
+- Data model references (User, Task, Assignment) map to the DR section.
 
-## Technical Integration Points
-- Auth: JWT issued by Auth component (FastAPI).
-- Notifications: Internal Notification Service with message queue (e.g., Redis/RQ or AWS SQS) and connector to Email Provider (SMTP/SES).
-- Persistence: PostgreSQL with migrations and backups.
-- Deployment: Docker images, CI/CD pipeline to AWS/Azure, basic monitoring/alerts.
+FR-001: User registration
+- Requirement: The system MUST allow a new user to register and create an account using name and email; system MUST persist a password hash.
+- Details:
+  - Endpoint: POST /api/v1/auth/register
+  - Input: name, email, password
+  - Validation: email format, password >= 8 chars, unique email
+  - Data: Populate User table (user_id, name, email, password_hash, created_at)
+- Security: Passwords MUST be hashed with a strong algorithm (bcrypt/Argon2) per NFR4.
+- Acceptance criteria:
+  - Given valid name/email/password, when POST /register is called, then response 201 Created and user row inserted within 2s.
+  - Given existing email, when POST /register is called, then response 409 Conflict with error code "EMAIL_ALREADY_EXISTS".
+  - Password stored MUST not be reversible and verification MUST succeed for correct password.
 
-## Testing & Acceptance Strategy
-- Unit tests for business logic (creation, assignment, authorization).
-- API integration tests for endpoints and auth flows.
-- End-to-end UI tests for core workflows (create/assign/dashboard).
-- Load testing simulating 500 concurrent users for core list endpoints.
-- Security tests: dependency scans, basic OWASP checklists.
+FR-002: Secure user login (JWT)
+- Requirement: The system MUST allow users to log in using email and password and receive a JWT access token.
+- Details:
+  - Endpoint: POST /api/v1/auth/login
+  - Output: JWT access token (expires configurable; refresh tokens optional for later)
+  - Success response includes user_id, name, email (no password)
+- Security: Session token issued MUST be used for authorization on protected endpoints via Authorization: Bearer <token>. TLS/HTTPS MUST be used for all communication (NFR5).
+- Acceptance criteria:
+  - Valid credentials → 200 OK + JWT; token decodable and contains user_id and expiry.
+  - Invalid credentials → 401 Unauthorized with no token.
+  - System MUST rotate session state on credential change (password reset).
 
-## Implementation Notes & Prioritization
-- MVP (must-have): FR-001, FR-002, FR-003, FR-004, FR-006, FR-008, FR-010.
-- Next iteration (should/could): FR-005, FR-007, FR-009, richer notification preferences, role-based permissions.
-- Defer: Advanced analytics, external integrations, mobile apps.
+FR-003: Create a new task
+- Requirement: Authenticated users MUST be able to create a task with title, description (optional), status (default "Open"), priority (Low/Medium/High), and optional assignee.
+- Details:
+  - Endpoint: POST /api/v1/tasks
+  - Data persisted to Task table (task_id, title, description, status, priority, created_by, created_at)
+  - If assignee present, create Assignment record and trigger assignment notification (FR-010).
+- Acceptance criteria:
+  - Valid request by authenticated user → 201 Created and task row exists within DB; API response contains task_id and created_at.
+  - Title length validation: title MUST be non-empty and <= 250 chars; if invalid → 400 Bad Request.
+  - Default status MUST be "Open" if not provided.
+
+FR-004: Assign task to team member
+- Requirement: Authenticated users MUST be able to assign a task to a team member; assignment MUST create an Assignment record with assigned_at timestamp.
+- Details:
+  - Endpoint: POST /api/v1/tasks/{task_id}/assign
+  - Input: assignee_user_id
+  - Business rule: assignee_user_id MUST be a valid user in same team/organization (team model optional for v1; if absent, allow any existing user within system — document assumption).
+  - Trigger: assignment MUST enqueue/send notification (FR-010).
+- Acceptance criteria:
+  - Valid assign request → 200 OK; Assignment record present with task_id, user_id, assigned_at within 2s.
+  - Assigning to non-existent user → 404 Not Found.
+  - Reassigning (changing assignee) MUST update Assignment table with latest assigned_at and preserve history (if history unsupported, previous row may be soft-deleted) — acceptance: API returns previous_assignee_id (if existed) or null.
+
+FR-005: Edit an existing task
+- Requirement: Authenticated users MUST be able to edit task fields (title, description, status, priority, assignee) they are authorized to edit.
+- Details:
+  - Endpoint: PATCH /api/v1/tasks/{task_id}
+  - Authorization: Only task creator or assigned user or manager role (if roles implemented) MAY edit; otherwise 403 Forbidden.
+  - Validation: same as create (title max 250 chars).
+- Acceptance criteria:
+  - Valid edit by authorized user → 200 OK and DB state updated within 2s; GET /tasks/{task_id} returns updated values.
+  - Unauthorized edit → 403 Forbidden.
+  - Invalid fields → 400 Bad Request with field-level errors.
+
+FR-006: Mark task as completed
+- Requirement: Authenticated users MUST be able to change task status to "Completed".
+- Details:
+  - Endpoint: POST /api/v1/tasks/{task_id}/complete (or PATCH status)
+  - Business rule: Status transition MUST be validated (e.g., Open/ In Progress -> Completed allowed).
+- Acceptance criteria:
+  - Valid transition → 200 OK; Task.status == "Completed" persisted and completed_at timestamp recorded.
+  - Attempt to complete non-existent task → 404 Not Found.
+
+FR-007: Delete a task
+- Requirement: Authenticated users MUST be able to delete tasks they created (soft delete recommended). Deletion MUST remove task from default dashboard view.
+- Details:
+  - Endpoint: DELETE /api/v1/tasks/{task_id}
+  - Behavior: Soft delete (is_deleted flag) to allow audit and reduce accidental data loss.
+  - Authorization: Only task creator or manager MAY delete; otherwise 403 Forbidden.
+- Acceptance criteria:
+  - Authorized delete → 204 No Content and task.is_deleted == true within DB.
+  - Deleted tasks MUST not appear in dashboard results or standard GET /tasks responses unless include_deleted=true parameter is used by admins.
+  - Unauthorized delete → 403 Forbidden.
+
+FR-008: Dashboard showing all tasks
+- Requirement: Authenticated users MUST be presented with a dashboard listing all tasks relevant to their team or accessible scope; dashboard MUST support pagination and display core task fields (title, status, priority, assignee, created_at).
+- Details:
+  - Endpoint: GET /api/v1/tasks?limit=20&offset=0
+  - Response: Array of task summaries, total_count for pagination
+- UI: Desktop and tablet responsive layouts per NFR6
+- Acceptance criteria:
+  - GET /tasks with valid auth returns 200 OK with tasks sorted by updated_at desc by default, limit respected, total_count accurate.
+  - Dashboard load time: median response < 500 ms; 95th percentile < 2 s under expected load (NFR2, NFR1).
+
+FR-009: Filter tasks by status
+- Requirement: Users MUST be able to filter tasks by status (Open, In Progress, Completed) on dashboard and API.
+- Details:
+  - Endpoint: GET /api/v1/tasks?status=Completed
+  - UI: Provide status dropdown/pills to filter results client-side or server-side.
+- Acceptance criteria:
+  - Filtering by status returns only tasks with requested status and total_count matches filtered result.
+  - Combining filters (status + assignee) MUST be supported; response time constraints same as dashboard.
+
+FR-010: Notifications when tasks are assigned
+- Requirement: The system MUST deliver notifications to users when tasks are assigned to them. Notifications MUST be available in-app; email notification MAY be sent if user has an email configured and email delivery enabled.
+- Details:
+  - Notification types: assignment
+  - Delivery: in-app notification record persisted (Notification table) and surfaced in UI; optional email sent via SMTP service with templated content.
+  - Endpoint: GET /api/v1/notifications and POST /api/v1/notifications/mark-read
+  - Rate-limiting: Prevent notification spam; if multiple assignments occur within a short window (e.g., 1 minute) aggregate into a single digest notification.
+- Acceptance criteria:
+  - Upon successful assignment (FR-004), recipient sees an in-app notification within 5 seconds and notification record exists with created_at timestamp.
+  - Optional email: when enabled and SMTP configured, an email is sent within 30s; failures logged and retried (3 attempts).
+  - Notification read/unread state updated via API and reflected in UI.
 
 ---
 
-### RULES USED BY THIS WORKFLOW
-- rules/ai-assistant-usage-policy.md
-- rules/code-anti-patterns.md
-- rules/dry-principle-guidelines.md
-- rules/iterative-development-guide.md
-- rules/language-agnostic-standards.md
-- rules/markdown-styleguide.md
-- rules/performance-best-practices.md
-- rules/security-standards-owasp.md
-- rules/uml-text-code-standards.md
+# Non-Functional Requirements (NFR) mapping
 
-### EVALUATION SCORES
+NFR-001: Concurrency and scalability
+- Requirement: The system MUST support at least 500 concurrent users.
+- Measurement: Load test demonstrating 500 concurrent authenticated users performing common workflows (view dashboard, create tasks) with 95th percentile response < 2s.
+- Implementation notes: Horizontal scaling of API containers; Redis optional for caching; connection pool sizing for DB.
 
-| Criterion | Score (1-5) |
-|----------|-------------:|
-| Business Alignment | 5 |
-| Clarity / Unambiguity | 4 |
-| Testability | 4 |
-| Completeness (MVP coverage) | 4 |
-| Security Considerations | 4 |
+NFR-002: API performance
+- Requirement: API response time SHOULD be under 2 seconds; median < 500ms, 95th percentile < 2s.
+- Measurement: Performance tests in CI that assert median and P95 thresholds on representative endpoints.
 
-Average Score: 4.2
+NFR-003: Uptime
+- Requirement: System MUST maintain at least 99.5% uptime (monthly).
+- Measurement: Monitoring and alerts via cloud provider/AWS CloudWatch or Azure Monitor.
 
-Evaluation summary:
-The spec aligns strongly with the BRD and business objectives, providing testable deterministic FRs, clear use cases, and PlantUML diagrams for core flows. Key risks and mitigations are identified and the MVP scope is prioritized to meet the 3-month constraint. Remaining clarifications: team membership model and role-based permissions for edit/delete should be finalized before implementation.
+NFR-004: Password hashing / security
+- Requirement: User passwords MUST be securely hashed (bcrypt/Argon2) and salts used; secrets stored in environment/secret manager.
+- Acceptance: Code review and security scan verifying hashing algorithm usage.
+
+NFR-005: Transport security
+- Requirement: Application MUST use HTTPS for all communication.
+- Acceptance: TLS termination configured at load balancer; redirect HTTP -> HTTPS.
+
+NFR-006: Responsive UI
+- Requirement: UI MUST be responsive and usable on desktop and tablet breakpoints.
+- Measurement: Manual verification / automated visual regression across breakpoints (>= 1024px and 768px).
+
+Additional NFRs implied:
+- Logging & Monitoring: Structured logs, error tracking, and health endpoints for orchestration.
+- Backups: Daily DB backups and point-in-time recovery plan (see Constraints & Assumptions).
+
+---
+
+# Data requirements (summary & schemas)
+
+Entities (from BRD):
+- User (user_id PK, name, email unique, password_hash, created_at, role (optional), team_id (optional))
+- Task (task_id PK, title, description, status, priority, created_by (FK User), created_at, updated_at, completed_at (nullable), is_deleted boolean)
+- Assignment (assignment_id PK, task_id FK, user_id FK, assigned_at)
+- Notification (notification_id PK, user_id FK, type, payload JSON, created_at, read_at nullable)
+
+Minimal SQL-like schemas (for developer reference):
+- users(user_id UUID PK, name TEXT, email TEXT UNIQUE, password_hash TEXT, created_at TIMESTAMP, role TEXT NULL, team_id UUID NULL)
+- tasks(task_id UUID PK, title TEXT, description TEXT, status TEXT, priority TEXT, created_by UUID FK, created_at TIMESTAMP, updated_at TIMESTAMP, completed_at TIMESTAMP NULL, is_deleted BOOLEAN DEFAULT FALSE)
+- assignments(assignment_id UUID PK, task_id UUID FK, user_id UUID FK, assigned_at TIMESTAMP)
+- notifications(notification_id UUID PK, user_id UUID FK, type TEXT, payload JSONB, created_at TIMESTAMP, read_at TIMESTAMP NULL)
+
+Data retention:
+- Soft deletes maintained; audit retention policy to be defined (assumption: keep records for 90 days).
+
+---
+
+# Use Case Analysis (Actors & System Boundary)
+
+Primary actors:
+- End User: any authenticated team member who creates/edits/assigns tasks.
+- Manager: same as End User but with broader permissions (optional role).
+- System: TaskFlow backend (API, DB, Notification service).
+- Email Service (External): SMTP provider for optional email notifications.
+- Auth Service (internal component issuing JWTs).
+
+System boundary:
+- TaskFlow application (frontend + backend + DB + notification queue). External SMTP provider is outside boundary.
+
+Use Cases:
+- UC-001: Register Account
+- UC-002: Login
+- UC-003: Create Task
+- UC-004: Assign Task
+- UC-005: Edit Task
+- UC-006: Mark Task Completed
+- UC-007: Delete Task
+- UC-008: View Dashboard
+- UC-009: Filter Tasks
+- UC-010: Receive Assignment Notification
+
+For each UC: include actor(s), preconditions, primary flow, alternative flows, postconditions, PlantUML diagram.
+
+UC-001: Register Account
+- Actors: End User
+- Preconditions: None
+- Primary trigger: User clicks Sign Up and submits name/email/password.
+- Primary flow:
+  1. User submits registration form.
+  2. Frontend POSTs to /api/v1/auth/register.
+  3. Backend validates input and creates a User row with password_hash.
+  4. Backend returns 201 Created.
+- Alternative flows:
+  - Email already exists → 409 Conflict.
+  - Invalid input → 400 Bad Request.
+- Postconditions: New user record exists; user may then log in.
+- Acceptance criteria: See FR-001.
+- PlantUML:
+```plantuml
+@startuml
+left to right direction
+actor "End User"
+rectangle "TaskFlow System" {
+  usecase (Register Account) as UC1
+}
+End User --> UC1
+@enduml
+```
+
+UC-002: Login
+- Actors: End User
+- Preconditions: User account exists
+- Primary flow:
+  1. User submits email/password.
+  2. Frontend POSTs to /api/v1/auth/login.
+  3. Backend validates credentials and returns JWT.
+- Alternative flows:
+  - Invalid credentials → 401 Unauthorized.
+- Postconditions: Client holds JWT to call protected APIs.
+- Acceptance criteria: See FR-002.
+- PlantUML:
+```plantuml
+@startuml
+left to right direction
+actor "End User"
+rectangle "TaskFlow System" {
+  usecase (Login) as UC2
+}
+End User --> UC2
+@enduml
+```
+
+UC-003: Create Task
+- Actors: End User
+- Preconditions: Authenticated (valid JWT)
+- Primary flow:
+  1. User fills new task form and submits.
+  2. Frontend POSTs to /api/v1/tasks.
+  3. Backend validates, creates Task row, optionally Assignment row, returns 201 Created.
+- Alternative flows:
+  - Invalid title → 400 Bad Request.
+- Postconditions: Task persisted and visible on dashboard.
+- Acceptance criteria: See FR-003.
+- PlantUML:
+```plantuml
+@startuml
+left to right direction
+actor "End User"
+rectangle "TaskFlow System" {
+  usecase (Create Task) as UC3
+}
+End User --> UC3
+@enduml
+```
+
+UC-004: Assign Task
+- Actors: End User (assigner), End User (assignee)
+- Preconditions: Authenticated, task exists
+- Primary flow:
+  1. Assigner selects assignee and submits.
+  2. Frontend POSTs to /api/v1/tasks/{id}/assign.
+  3. Backend validates assignee and creates Assignment row.
+  4. Backend creates Notification record and schedules/send email if enabled.
+- Alternative flows:
+  - Assignee not found → 404 Not Found.
+- Postconditions: Assignee receives notification; task assignment persisted.
+- Acceptance criteria: See FR-004 and FR-010.
+- PlantUML:
+```plantuml
+@startuml
+left to right direction
+actor "Assigner"
+actor "Assignee"
+rectangle "TaskFlow System" {
+  usecase (Assign Task) as UC4
+}
+Assigner --> UC4
+UC4 --> Assignee : Notification
+@enduml
+```
+
+UC-005: Edit Task
+- Actors: End User
+- Preconditions: Authenticated, authorized to edit
+- Primary flow:
+  1. User edits fields and submits.
+  2. Backend validates authorization and updates Task row.
+- Alternative flows:
+  - Unauthorized → 403 Forbidden.
+- Postconditions: Task updated and visible.
+- Acceptance criteria: See FR-005.
+- PlantUML:
+```plantuml
+@startuml
+left to right direction
+actor "End User"
+rectangle "TaskFlow System" {
+  usecase (Edit Task) as UC5
+}
+End User --> UC5
+@enduml
+```
+
+UC-006: Mark Task Completed
+- Actors: End User
+- Preconditions: Authenticated, task exists
+- Primary flow:
+  1. User marks task complete via UI.
+  2. Backend updates status to Completed and sets completed_at.
+- Alternative flows:
+  - Invalid transition → 400 Bad Request.
+- Postconditions: Task status = Completed.
+- Acceptance criteria: See FR-006.
+- PlantUML:
+```plantuml
+@startuml
+left to right direction
+actor "End User"
+rectangle "TaskFlow System" {
+  usecase (Mark Task Completed) as UC6
+}
+End User --> UC6
+@enduml
+```
+
+UC-007: Delete Task
+- Actors: End User
+- Preconditions: Authenticated, authorized to delete
+- Primary flow:
+  1. User issues delete action.
+  2. Backend marks task.is_deleted = true.
+- Alternative flows:
+  - Unauthorized → 403 Forbidden.
+- Postconditions: Task absent from default dashboard.
+- Acceptance criteria: See FR-007.
+- PlantUML:
+```plantuml
+@startuml
+left to right direction
+actor "End User"
+rectangle "TaskFlow System" {
+  usecase (Delete Task) as UC7
+}
+End User --> UC7
+@enduml
+```
+
+UC-008: View Dashboard
+- Actors: End User
+- Preconditions: Authenticated
+- Primary flow:
+  1. User loads dashboard.
+  2. Frontend GET /api/v1/tasks and renders results.
+- Alternative flows:
+  - Backend errors → 500 Response + user-friendly message.
+- Postconditions: Tasks are displayed with pagination.
+- Acceptance criteria: See FR-008.
+- PlantUML:
+```plantuml
+@startuml
+left to right direction
+actor "End User"
+rectangle "TaskFlow System" {
+  usecase (View Dashboard) as UC8
+}
+End User --> UC8
+@enduml
+```
+
+UC-009: Filter Tasks
+- Actors: End User
+- Preconditions: Authenticated
+- Primary flow:
+  1. User selects status filter UI.
+  2. Frontend requests /api/v1/tasks?status=...
+- Postconditions: Dashboard displays only filtered tasks.
+- Acceptance criteria: See FR-009.
+- PlantUML:
+```plantuml
+@startuml
+left to right direction
+actor "End User"
+rectangle "TaskFlow System" {
+  usecase (Filter Tasks) as UC9
+}
+End User --> UC9
+@enduml
+```
+
+UC-010: Receive Assignment Notification
+- Actors: Assignee (End User)
+- Preconditions: Assignment exists
+- Primary flow:
+  1. System creates Notification record upon assignment.
+  2. Frontend pulls notifications or pushes via websocket (optional); user sees notification.
+  3. Optional: System sends email via SMTP.
+- Postconditions: Notification persisted and visible.
+- Acceptance criteria: See FR-010.
+- PlantUML:
+```plantuml
+@startuml
+left to right direction
+actor "Assignee"
+rectangle "TaskFlow System" {
+  usecase (Receive Assignment Notification) as UC10
+}
+Assignee --> UC10
+@enduml
+```
+
+---
+
+# Risks & Mitigations (Top 5, scoped to FRs)
+
+1. Risk: Authentication/authorization vulnerabilities (affects FR-001, FR-002, FR-005, FR-007)
+   - Mitigation: Use proven libraries for password hashing and JWT; enforce role checks; run security scan and peer review; apply OWASP best practices (see security-standards-owasp).
+
+2. Risk: Notification spam or delays (FR-010)
+   - Mitigation: Implement aggregation/rate-limiting and retry policies; monitor queue lengths and delivery failure metrics; configurable email enable/disable.
+
+3. Risk: Insufficient performance at target concurrency (FR-008, NFR-001, NFR-002)
+   - Mitigation: Load test early, use connection pooling, add caching (Redis) for frequently-read dashboard queries, scale horizontally behind LB.
+
+4. Risk: Data loss from accidental deletes (FR-007)
+   - Mitigation: Implement soft deletes and deletion confirmation UI; keep daily DB backups and enable point-in-time recovery.
+
+5. Risk: Scope creep impacting 3-month timeline (general)
+   - Mitigation: Enforce MoSCoW prioritization; freeze feature list for M0 release; plan subsequent releases for extras (role-based permissions, team model).
+
+---
+
+# Constraints & Assumptions (Top 5, scoped to FRs)
+
+Constraints:
+1. Timebox: Initial release MUST be completed within 3 months (BRD constraint).
+2. Cost: Minimize operational cost; initially use a single cloud region and modest instance sizing.
+3. Tech stack: Use open-source components where possible (React, Tailwind, FastAPI, PostgreSQL, Docker) as required by the BRD.
+4. No mobile apps for v1; support desktop and tablet only.
+5. No external project-management integrations in v1.
+
+Assumptions (explicit):
+1. Users have basic familiarity with web apps (BRD assumption). This affects UI complexity and onboarding flows.
+2. Teams will be < 50 members; data model & authorization designed for small teams; tag: may need scaling later.
+3. Internet connectivity available for users; offline mode not required.
+4. Team/organization model: BRD did not define teams; assume a flat system where tasks are visible to all users in pilot. If team isolation is required, this will be scoped to v2.
+5. Email notifications require SMTP credentials configured by ops; if missing, email notifications will be disabled and in-app notifications will remain.
+
+Document these assumptions must be validated with Product Owner before development start.
+
+---
+
+# Implementation considerations & APIs (high-level)
+
+Authentication:
+- JWT issued at login. All protected endpoints require Authorization header.
+- Passwords hashed using bcrypt/Argon2 stored in DB.
+
+API design (examples):
+- POST /api/v1/auth/register
+- POST /api/v1/auth/login
+- POST /api/v1/tasks
+- GET /api/v1/tasks?limit=&offset=&status=&assignee=
+- GET /api/v1/tasks/{id}
+- PATCH /api/v1/tasks/{id}
+- POST /api/v1/tasks/{id}/assign
+- POST /api/v1/tasks/{id}/complete
+- DELETE /api/v1/tasks/{id}
+- GET /api/v1/notifications
+- POST /api/v1/notifications/{id}/mark-read
+
+Notification delivery:
+- In-app: persist notifications and expose GET endpoint and websocket push (optional).
+- Email: optional SMTP with retry/backoff (3 attempts) and logging.
+
+Data access:
+- Use parameterized queries / ORM (SQLAlchemy) to avoid injection.
+- Indexing: tasks.status, tasks.created_by, assignments.user_id for queries.
+
+Deployment:
+- Containerize frontend and backend using Docker.
+- Use managed PostgreSQL (AWS RDS/Azure Database).
+- CI/CD pipeline to build and push images; run unit and integration tests and performance checks.
+
+Monitoring & logging:
+- Health endpoint /health
+- Structured logging; errors captured in Sentry or equivalent.
+- Metrics: request latency, error rate, queue lengths, notification delivery success.
+
+Backups:
+- Daily backups of PostgreSQL with point-in-time recovery enabled for production.
+
+---
+
+# Success metrics (traceable to business objectives)
+
+- Adoption: 80% of target users actively using TaskFlow within pilot period (BRD success).
+- Task operations: >95% success rate for create/edit/assign API calls.
+- Task completion rate: measurable increase in completed tasks vs baseline (specific baseline to be measured during pilot).
+- Performance: median API latency < 500 ms; P95 < 2 s; support 500 concurrent users under load test.
+- Reliability: 99.5% uptime monthly.
+- Notification delivery: In-app notifications delivered within 5s for 95% of assignment events; email delivery success >= 90% when enabled.
+
+---
+
+# Traceability matrix (mapping BRD -> Spec artifacts)
+
+- BRD FR1 (Users register) -> FR-001, UC-001
+- BRD FR2 (Login) -> FR-002, UC-002
+- BRD FR3 (Create tasks) -> FR-003, UC-003
+- BRD FR4 (Assign tasks) -> FR-004, UC-004
+- BRD FR5 (Edit tasks) -> FR-005, UC-005
+- BRD FR6 (Mark completed) -> FR-006, UC-006
+- BRD FR7 (Delete tasks) -> FR-007, UC-007
+- BRD FR8 (Dashboard) -> FR-008, UC-008
+- BRD FR9 (Filter by status) -> FR-009, UC-009
+- BRD FR10 (Notifications) -> FR-010, UC-010
+- NFR1-NFR6 -> NFR section and acceptance criteria embedded in FR-008 (performance), FR-001/002 (security/HTTPS), UI work for NFR6.
+
+---
+
+# QA & Acceptance testing guidance
+
+- Unit tests for business logic (task creation, assignment rules).
+- Integration tests for API endpoints including auth flows.
+- End-to-end tests for critical user flows: register -> login -> create task -> assign -> notification visible.
+- Performance tests: simulate 500 concurrent users performing reads & writes; verify response percentiles.
+- Security review: verify password hashing algorithm, token handling, OWASP checks.
+- Accessibility: light checks for keyboard navigation and screen reader labels for major UI components.
+
+Pre-delivery checklist:
+- Business alignment: requirements covered above (yes).
+- Stakeholder coverage: Product Owner / PM / Dev team validated.
+- Testability: Each FR has acceptance criteria.
+- FR completeness: FR-001 through FR-010 expanded.
+- Clarity: Must/SHALL used for required behavior.
+- Traceability: Matrix above provided.
+- Risk assessment: Top 5 risks documented with mitigation.
+
+---
+
+# Open questions (to resolve prior to development)
+
+1. Team model: Should tasks be scoped to a team/organization or globally visible to all users in v1? (Assumption currently: global/pilot)
+2. Roles and permissions: Is a Manager role required in v1 or deferred to v2? (Assumption: optional; basic creator/assignee rules enforced)
+3. Email notifications: Will SMTP credentials be provided for initial deployment, or should email remain disabled for the pilot?
+4. Assignment history: Is preserving full assignment history required in v1 or is storing only latest assignee acceptable?
+5. Refresh tokens: Are refresh tokens required for session management in v1 or can short-lived JWT only be used?
+
+Each question MUST be answered by Product Owner before sprint 0.
+
+---
+
+# Appendix: Implementation priorities (MUST/SHOULD/CAN - MoSCoW)
+
+Must (M0) for initial release (3 months):
+- FR-001 Registration
+- FR-002 Login (JWT)
+- FR-003 Create Task
+- FR-004 Assign Task (basic assignment + in-app notification)
+- FR-005 Edit Task
+- FR-006 Mark Completed
+- FR-007 Delete Task (soft delete)
+- FR-008 Dashboard (list + pagination)
+- FR-009 Filter by status
+- NFR-004 & NFR-005 (secure hashing, HTTPS)
+- Basic monitoring, backups, and deployment pipeline
+
+Should (M1) for early post-release:
+- Email notifications (FR-010 optional email)
+- Role-based Manager permissions
+- Assignment history tracking
+
+Could (M2) for later:
+- Websocket-based real-time updates
+- Team/organization isolation and admin console
+
+Won't (M3) for current project:
+- Advanced analytics, AI-based features, mobile applications, external integrations
+
+---
+
+End of Product Specification for TaskFlow.
