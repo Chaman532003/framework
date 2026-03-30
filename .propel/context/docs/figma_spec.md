@@ -1,7 +1,7 @@
 # Figma Design Specification - TaskFlow
 
 ## 1. Figma Specification
-**Platform**: Web / Responsive
+**Platform**: Responsive (Web & Tablet)
 
 ---
 
@@ -15,8 +15,8 @@
 ### Optional Sources
 | Document | Path | Purpose |
 |----------|------|---------|
-| Wireframes | `.propel/context/wireframes/` | Entity understanding, content structure (Not provided, implicit) |
-| Design Assets | `.propel/context/Design/` | Visual references from spec.md epics (To be generated) |
+| Wireframes | `.propel/context/wireframes/` | Entity understanding, content structure |
+| Design Assets | `.propel/context/Design/` | Visual references from spec.md epics |
 
 ### Related Documents
 | Document | Path | Purpose |
@@ -32,66 +32,34 @@
 ### UXR Requirements Table
 | UXR-ID | Category | Requirement | Acceptance Criteria | Screens Affected |
 |--------|----------|-------------|---------------------|------------------|
-| UXR-101 | Usability | System MUST provide a clear and intuitive user registration process. | 1. User can complete registration with required fields (Name, Email, Password).<br/>2. Password strength requirements are clearly communicated before submission. | SCR-001 |
-| UXR-102 | Usability | System MUST allow registered users to log in efficiently. | 1. User can successfully log in using correct credentials and be redirected to the dashboard.<br/>2. Login form fields are clearly labeled and accessible. | SCR-002 |
-| UXR-103 | Usability | System MUST enable users to create tasks easily and quickly. | 1. Task creation form is easily discoverable and navigable.<br/>2. Form fields for Title, Description, Status, and Priority are clearly presented with sensible defaults. | SCR-004 |
-| UXR-104 | Usability | System MUST provide a clear mechanism for assigning tasks to team members. | 1. An "Assign To" option is readily available in task detail/edit views.<br/>2. The assignee selection interface provides a searchable list of users for efficient selection. | SCR-005 |
-| UXR-105 | Usability | System MUST allow users to modify task details intuitively. | 1. Task details (Title, Description, Status, Priority) are pre-filled in an editable form.<br/>2. "Save Changes" action is clearly identifiable and provides feedback. | SCR-005 |
-| UXR-106 | Usability | System MUST provide a quick action to mark a task as 'Completed'. | 1. A dedicated UI element (e.g., checkbox, button) allows users to change task status to 'Completed' with a single interaction.<br/>2. The action is discoverable and provides immediate visual feedback. | SCR-003, SCR-005 |
-| UXR-107 | Usability | System MUST prevent accidental task deletion. | 1. A confirmation prompt is displayed before a task is permanently deleted.<br/>2. Confirmation message clearly states the irreversible nature of the action. | SCR-003, SCR-005 |
-| UXR-108 | Usability | System MUST display a clear and comprehensive task dashboard. | 1. The dashboard visually distinguishes between tasks created by the user, assigned to the user, and team tasks.<br/>2. Each task entry clearly shows its Title, Status, Priority, and Assignee(s). | SCR-003 |
-| UXR-109 | Usability | System MUST ensure dashboard data reflects the latest changes promptly. | 1. Task creation, updates, and deletions are reflected on the dashboard within 200ms.<br/>2. Loading states are provided for data fetching. | SCR-003 |
-| UXR-110 | Usability | System MUST provide intuitive filtering options for tasks on the dashboard. | 1. Filter controls for task status are clearly visible and easy to interact with.<br/>2. Applying or clearing filters immediately updates the displayed task list. | SCR-003 |
-| UXR-200 | Accessibility | All UI elements MUST meet WCAG 2.2 Level AA compliance. | 1. All interactive elements have appropriate ARIA attributes for screen readers.<br/>2. Keyboard navigation is fully supported for all flows. | All Screens |
-| UXR-201 | Accessibility | Registration form MUST be accessible to users of assistive technologies. | 1. All input fields are programmatically associated with visible labels.<br/>2. Error messages are linked to their respective input fields via `aria-describedby`. | SCR-001 |
-| UXR-202 | Accessibility | Login form MUST be accessible to users of assistive technologies. | 1. All input fields are programmatically associated with visible labels.<br/>2. Error messages are clearly communicated to screen readers. | SCR-002 |
-| UXR-203 | Accessibility | Task creation form MUST be accessible to users of assistive technologies. | 1. Input fields and dropdowns are programmatically associated with visible labels.<br/>2. Validation errors are communicated effectively to screen readers. | SCR-004 |
-| UXR-204 | Accessibility | Task assignment user search/select interface MUST be accessible. | 1. Search input has an appropriate label.<br/>2. List of users is navigable and selectable via keyboard and screen reader.<br/>3. Selection status is clearly announced. | SCR-005 (Assign Task Modal) |
-| UXR-205 | Accessibility | Dashboard task list/table MUST be accessible. | 1. If tabular, column headers are properly associated with data cells (e.g., `<th>` with `scope`).<br/>2. Keyboard users can navigate and interact with tasks. | SCR-003 |
-| UXR-206 | Accessibility | Dashboard filter controls MUST be accessible. | 1. Filter options are clearly labeled and their state (selected/unselected) is programmatically discernible.<br/>2. Users can interact with filters using only a keyboard. | SCR-003 |
-| UXR-207 | Accessibility | All text and UI elements MUST meet minimum color contrast requirements. | 1. Normal text contrast ratio is >= 4.5:1.<br/>2. Large text (18pt+/14pt+ bold) contrast ratio is >= 3:1.<br/>3. Non-text UI components (icons, borders) contrast ratio is >= 3:1. | All Screens |
-| UXR-208 | Accessibility | All interactive elements MUST have clearly visible focus states. | 1. Focus indicator (e.g., outline) is visible and has a contrast ratio of >= 3:1 against adjacent colors.<br/>2. Focus indicator is at least 2px thick and has an offset. | All Screens |
-| UXR-209 | Accessibility | Mobile touch targets MUST be adequately sized. | 1. Interactive elements on mobile breakpoints have a minimum target size of 44x44px. | All Screens (Mobile Breakpoint) |
-| UXR-210 | Accessibility | All interactive elements MUST use appropriate semantic HTML or ARIA roles and properties. | 1. Buttons use `<button>`, links use `<a>`, forms use `<form>`, etc.<br/>2. Custom interactive elements have appropriate ARIA roles (e.g., `role="dialog"`, `aria-label`). | All Screens |
-| UXR-211 | Accessibility | All interactive elements MUST be keyboard operable and follow a logical tab order. | 1. Users can navigate sequentially through all interactive elements using Tab/Shift+Tab.<br/>2. Focus does not get trapped within any component (e.g., modal can be dismissed with Escape). | All Screens |
-| UXR-212 | Accessibility | Dynamic content updates MUST be announced to screen readers. | 1. Use of ARIA live regions for notifications (e.g., task assignment confirmation, error messages) when they appear dynamically. | SCR-003, SCR-005 |
-| UXR-301 | Responsiveness | UI MUST adapt gracefully across desktop and tablet screen sizes (768px and above). | 1. Layouts automatically adjust for varying screen widths without horizontal scrolling.<br/>2. Content reflows and scales appropriately to prevent truncation or overlap. | All Screens |
-| UXR-302 | Responsiveness | Key interactive elements MUST be appropriately sized and positioned for touch and mouse interaction on all supported devices. | 1. Buttons, form fields, and navigation items maintain comfortable touch/click targets on tablets and desktops.<br/>2. Spacing between elements ensures usability on touch devices. | All Screens |
-| UXR-401 | Visual Design | All UI components and layouts MUST adhere strictly to the defined design system tokens. | 1. Colors, typography, spacing, and border radii used are exclusively from `designsystem.md`.<br/>2. Consistency in visual styling is maintained across all screens and components. | All Screens |
-| UXR-501 | Interaction | System MUST provide clear feedback upon task assignment. | 1. Assigned users receive an in-app toast notification or visual badge update.<br/>2. The notification clearly indicates the assigned task and assigner. | SCR-003, SCR-005 |
-| UXR-502 | Interaction | System MUST provide immediate visual feedback for task status updates. | 1. When a task status is changed (e.g., to 'Completed'), the UI reflects this change without a page reload.<br/>2. A subtle animation or color change highlights the update. | SCR-003, SCR-005 |
-| UXR-503 | Interaction | System MUST provide clear visual confirmation and feedback for task deletion. | 1. After confirmation, the task visually disappears from the list/dashboard.<br/>2. A brief success message (e.g., toast) confirms deletion. | SCR-003, SCR-005 |
-| UXR-504 | Interaction | System MUST provide immediate visual feedback when filters are applied/cleared on the dashboard. | 1. The task list updates without noticeable delay (within 200ms) after filter changes.<br/>2. A loading indicator appears if the update takes longer than 300ms. | SCR-003 |
-| UXR-505 | Interaction | In-app notifications MUST be clear, concise, and non-intrusive. | 1. Notifications (e.g., toast messages for success/error) are brief and appear for a limited duration.<br/>2. They provide sufficient information without blocking user workflow. | SCR-003, SCR-005 |
-| UXR-601 | Error Handling | System MUST display specific and actionable inline error messages for registration failures. | 1. When validation fails (e.g., email taken, invalid password), specific error messages appear next to the problematic fields.<br/>2. Global errors (e.g., system error) are handled with a generic message. | SCR-001 |
-| UXR-602 | Error Handling | System MUST display a generic, non-specific error message for invalid login credentials. | 1. For incorrect email or password, a single message "Invalid credentials" is shown, without distinguishing between the two. | SCR-002 |
-| UXR-603 | Error Handling | System MUST provide inline error messages for mandatory task creation fields. | 1. An error message "Task Title is required" appears next to the title field if it's left empty.<br/>2. System errors are handled with a generic message and retry option. | SCR-004 |
-| UXR-604 | Error Handling | System MUST provide inline error messages for mandatory task edit fields. | 1. An error message appears if a mandatory field (e.g., Title) is left empty during task modification. | SCR-005 |
-
-### UXR Categories
-- **Usability**: Navigation, discoverability, efficiency (max 3 clicks, clear hierarchy)
-- **Accessibility**: WCAG 2.2 AA compliance, assistive technology support
-- **Responsiveness**: Breakpoint behavior, viewport adaptation
-- **Visual Design**: Design system adherence, consistency
-- **Interaction**: Feedback, loading states, animations (response within 200ms)
-- **Error Handling**: Error messages, recovery paths
+| UXR-101 | Usability | System MUST provide a clear and intuitive registration process. | User can complete registration successfully within 3 steps. All form fields have clear labels and placeholder text. | SCR-001 |
+| UXR-102 | Usability | System MUST enable efficient login and immediate access to dashboard. | User can log in in a single step (after initial registration). Upon successful login, user is redirected to the main dashboard (SCR-003) within 2 seconds. | SCR-002, SCR-003 |
+| UXR-103 | Usability | System MUST provide an easy-to-use form for creating new tasks. | The 'Create Task' form fields are clearly labeled, include helpful placeholder/tooltip text, and mandatory fields are visibly indicated. Default values are pre-selected for status and priority. | SCR-004 |
+| UXR-104 | Usability | System MUST provide clear visibility of all relevant tasks on the dashboard. | Each task entry on SCR-003 clearly displays title, status, priority, and assignee(s) at a glance. | SCR-003 |
+| UXR-105 | Usability | System MUST allow users to filter tasks on the dashboard easily. | Filter controls for task status are readily accessible on SCR-003, and applying/clearing filters updates the task list within 1 second. | SCR-003 |
+| UXR-106 | Usability | System MUST provide a straightforward way to manage individual tasks. | Users can access task details for editing, assigning, updating status, and deleting from the dashboard or a dedicated task view (SCR-005). | SCR-003, SCR-005 |
+| UXR-201 | Accessibility | All interactive elements MUST meet WCAG 2.2 AA contrast standards. | Text contrast >= 4.5:1 for normal text and >= 3:1 for large text. UI component contrast >= 3:1. | ALL |
+| UXR-202 | Accessibility | All interactive elements MUST provide clear and persistent focus indicators. | Focus states are visibly distinct (e.g., 2px outline offset) for buttons, input fields, links, and filters. | ALL |
+| UXR-203 | Accessibility | All forms MUST have programmatically associated labels for inputs. | Each input field (`TextField`, `Select`) on forms (SCR-001, SCR-002, SCR-004, SCR-005) uses `<label for>` or `aria-labelledby`. | SCR-001, SCR-002, SCR-004, SCR-005 |
+| UXR-204 | Accessibility | The UI MUST be fully keyboard navigable and follow a logical tab order. | Users can navigate through all interactive elements using Tab/Shift+Tab and activate them with Enter/Space. Tab order follows visual reading order. | ALL |
+| UXR-205 | Accessibility | All images conveying information MUST have descriptive alt text. | Informative images (e.g., empty state illustrations) include meaningful `alt` attributes. Decorative images have `alt=""` or `aria-hidden="true"`. | SCR-003 |
+| UXR-301 | Responsiveness | The UI MUST adapt gracefully to tablet and desktop screen sizes (768px and above). | Layouts, font sizes, and component dimensions adjust appropriately for widths 768px, 1024px, and 1440px without horizontal scrolling. | ALL |
+| UXR-401 | Visual Design | All UI elements MUST adhere to the defined Design System tokens. | All colors, typography, spacing, and component styles match values in `designsystem.md`. | ALL |
+| UXR-402 | Visual Design | The overall visual design MUST be consistent across all screens. | Components, layout patterns, and visual feedback mechanisms (e.g., modals, toasts) are visually uniform throughout the application. | ALL |
+| UXR-501 | Interaction | System MUST provide clear visual feedback during loading states. | Skeleton screens or spinners are displayed for content areas loading for more than 300ms, maintaining layout structure. | ALL |
+| UXR-502 | Interaction | System MUST provide immediate feedback for form submissions and actions. | Success/error messages (e.g., Toast notifications) are displayed upon form submission or critical actions (e.g., task creation, deletion). | SCR-001, SCR-002, SCR-004, SCR-005, SCR-003 |
+| UXR-503 | Interaction | System MUST provide notifications for task assignments. | A clear visual indicator (e.g., an in-app toast or badge on a notification icon) informs the user of a new task assignment. | Global (Header), SCR-003 |
+| UXR-601 | Error Handling | All form validation errors MUST be displayed inline and be actionable. | When validation fails (UC-001 AF-1.2, UC-002 AF-2.1), an error message appears directly below the problematic field, and the field is visually highlighted. | SCR-001, SCR-002, SCR-004, SCR-005 |
+| UXR-602 | Error Handling | System MUST display clear and concise error messages for system failures. | For unexpected system errors (UC-001 AF-1.3, UC-002 AF-2.2), a user-friendly error message is displayed (e.g., "An unexpected error occurred. Please try again.") with potential retry options. | ALL (Error states) |
+| UXR-603 | Error Handling | Destructive actions MUST require user confirmation. | Deleting a task (FR-TASK-005) or similar irreversible actions trigger a modal confirmation dialog before proceeding. | SCR-005, SCR-003 (via context menu) |
 
 ### UXR Derivation Logic
-- **Usability UXR**: Derived from UC-XXX success paths (navigation depth, discoverability)
-- **Accessibility UXR**: Derived from WCAG 2.2 AA standards + designsystem.md constraints
-- **Responsiveness UXR**: Derived from platform targets + breakpoint definitions
-- **Visual Design UXR**: Derived from designsystem.md token requirements
-- **Interaction UXR**: Derived from flow complexity + state transitions
-- **Error Handling UXR**: Derived from UC-XXX alternative/exception paths
-
-### UXR Numbering Convention
-- UXR-001 to UXR-099: Project-wide requirements
-- UXR-1XX: Usability requirements
-- UXR-2XX: Accessibility requirements
-- UXR-3XX: Responsiveness requirements
-- UXR-4XX: Visual design requirements
-- UXR-5XX: Interaction requirements
-- UXR-6XX: Error handling requirements
+- **Usability UXR**: Derived from UC-001 (Register), UC-002 (Create Task), FR-DASH-001 (Dashboard), FR-DASH-002 (Filter), FR-TASK-003 (Modify), FR-TASK-005 (Delete).
+- **Accessibility UXR**: Derived from WCAG 2.2 AA standards and NFR-USABILITY-001.
+- **Responsiveness UXR**: Derived from NFR-USABILITY-001 for tablet and desktop targets.
+- **Visual Design UXR**: Derived from `designsystem.md` adherence.
+- **Interaction UXR**: Derived from UC success/alternative flows, FR-NOTIF-001, and general UX best practices for feedback.
+- **Error Handling UXR**: Derived from UC-001/AF-1.1, AF-1.2, AF-1.3, UC-002/AF-2.1, AF-2.2, FR-TASK-005.
 
 ---
 
@@ -99,10 +67,10 @@
 
 *Derived from spec.md - Reference only, do not duplicate full persona details*
 
-| Persona         | Role          | Primary Goals                                                                         | Key Screens                   |
-|-----------------|---------------|---------------------------------------------------------------------------------------|-------------------------------|
-| Team Member     | End User      | Execute tasks, collaborate, update progress, clear assignments.                       | Dashboard, Create Task, Task Detail |
-| Team Manager    | End User      | Assign tasks, track progress, ensure accountability, identify blockers.                 | Dashboard, Create Task, Task Detail |
+| Persona | Role | Primary Goals | Key Screens |
+|---------|------|---------------|-------------|
+| Team Member | Execute tasks, collaborate, update progress. | Clear assignments, easy task updates, simple interface. | Task Dashboard (SCR-003), Create Task (SCR-004), Task Detail/Edit (SCR-005) |
+| Team Manager | Assign tasks, track progress, ensure accountability. | Visibility of team tasks, easy assignment, overview of project status. | Task Dashboard (SCR-003), Create Task (SCR-004), Task Detail/Edit (SCR-005) |
 
 ---
 
@@ -113,18 +81,23 @@
 TaskFlow
 +-- Authentication
 |   +-- Register Account (SCR-001)
-|   +-- Login (SCR-002)
-+-- Dashboard (SCR-003)
-|   +-- Create Task (SCR-004)
-|   +-- Task Detail / Edit (SCR-005)
+|   +-- Log In (SCR-002)
++-- Main Application
+    +-- Task Dashboard (SCR-003)
+    |   +-- Create Task (SCR-004)
+    |   +-- Task Detail / Edit (SCR-005)
+    |       +-- Assign Task (Modal/Inline)
+    |       +-- Delete Confirmation (Modal)
+    +-- User Profile / Settings (Future Scope)
 ```
 
 ### Navigation Patterns
-| Pattern       | Type         | Platform Behavior                                    |
-|---------------|--------------|------------------------------------------------------|
-| Primary Nav   | Header/Menu  | Desktop: Persistent Header with "New Task" button and User Menu. Mobile: Hamburger menu or prominent FAB for "New Task". |
-| Secondary Nav | Filters      | Dashboard: Inline filter controls for task status.   |
-| Utility Nav   | User Menu    | Access to Logout.                                    |
+| Pattern | Type | Platform Behavior |
+|---------|------|-------------------|
+| Primary Nav | Header | Persistent header with Logo, "Create Task" button, User Menu, and potentially a notification indicator. Always visible on desktop and tablet. |
+| Utility Nav | User Menu | Dropdown from user avatar/name in header, containing Logout and potentially Profile (future). |
+| Contextual | Buttons / Links | Within dashboard and task detail for specific actions (e.g., Edit, Assign, Mark Complete, Delete). |
+| Global Filters | Inline | Filter controls for task status prominently displayed on the Task Dashboard (SCR-003). |
 
 ---
 
@@ -133,13 +106,13 @@ TaskFlow
 *All screens derived from use cases in spec.md*
 
 ### Screen List
-| Screen ID | Screen Name           | Derived From             | Personas Covered        | Priority | States Required                       |
-|-----------|-----------------------|--------------------------|-------------------------|----------|---------------------------------------|
-| SCR-001   | Register Account      | UC-001, FR-USER-001      | Team Member, Team Manager | P0       | Default, Loading, Error, Validation     |
-| SCR-002   | Login                 | FR-USER-002              | Team Member, Team Manager | P0       | Default, Loading, Error, Validation     |
-| SCR-003   | Dashboard             | FR-DASH-001, FR-DASH-002, UC-002, UC-003, UC-004, UC-005 | All                     | P0       | Default, Loading, Empty, Error        |
-| SCR-004   | Create Task           | UC-002, FR-TASK-001      | Team Member, Team Manager | P0       | Default, Loading, Error, Validation     |
-| SCR-005   | Task Detail / Edit    | UC-003, FR-TASK-002, FR-TASK-003, FR-TASK-004, FR-TASK-005 | All                     | P0       | Default, Loading, Error, Validation     |
+| Screen ID | Screen Name | Derived From | Personas Covered | Priority | States Required |
+|-----------|-------------|--------------|------------------|----------|-----------------|
+| SCR-001 | Register Account | UC-001 | Team Member, Team Manager | P0 | Default, Loading, Error, Validation |
+| SCR-002 | Log In | FR-USER-002 | Team Member, Team Manager | P0 | Default, Loading, Error, Validation |
+| SCR-003 | Task Dashboard | FR-DASH-001, FR-DASH-002, FR-NOTIF-001 | Team Member, Team Manager | P0 | Default, Loading, Empty, Error |
+| SCR-004 | Create Task Form | UC-002, FR-TASK-001 | Team Member, Team Manager | P0 | Default, Loading, Error, Validation |
+| SCR-005 | Task Detail / Edit | FR-TASK-002, FR-TASK-003, FR-TASK-004, FR-TASK-005 | Team Member, Team Manager | P0 | Default, Loading, Error, Validation |
 
 ### Priority Legend
 - **P0**: Critical path (must-have for MVP)
@@ -148,58 +121,60 @@ TaskFlow
 - **P3**: Nice-to-have (low priority)
 
 ### Screen-to-Persona Coverage Matrix
-| Screen            | Team Member | Team Manager | Notes                               |
-|-------------------|-------------|--------------|-------------------------------------|
-| Register Account  | Primary     | Primary      | Entry point for new users.          |
-| Login             | Primary     | Primary      | All users need to log in.           |
-| Dashboard         | Primary     | Primary      | Core view for all task management.  |
-| Create Task       | Primary     | Primary      | Both roles can create tasks.        |
-| Task Detail / Edit | Primary     | Primary      | Both roles interact with task details. |
+| Screen | Team Member | Team Manager | Notes |
+|--------|-------------|--------------|-------|
+| SCR-001 | Primary | Primary | Entry point for new users |
+| SCR-002 | Primary | Primary | Entry point for existing users |
+| SCR-003 | Primary | Primary | Central task management hub |
+| SCR-004 | Primary | Primary | Essential for creating work |
+| SCR-005 | Primary | Primary | Detailed task management |
 
 ### Modal/Overlay Inventory
-| Name                 | Type    | Trigger                     | Parent Screen(s)              | Priority |
-|----------------------|---------|-----------------------------|-------------------------------|----------|
-| Confirm Delete Task  | Modal   | Click "Delete Task"         | SCR-003, SCR-005              | P0       |
-| Assign Task Selector | Modal/Drawer | Click "Assign To"           | SCR-005                       | P0       |
-| Global Toast         | Toast   | Success/Error messages (e.g., "Task created successfully") | All authenticated screens     | P0       |
+| Name | Type | Trigger | Parent Screen(s) | Priority |
+|------|------|---------|-----------------|----------|
+| Confirmation Modal | Dialog | Delete Task action (FR-TASK-005) | SCR-003 (context menu), SCR-005 | P0 |
+| Assign Task Modal | Modal | Click "Assign To" button (FR-TASK-002) | SCR-005 (Task Detail) | P0 |
+| Notification Toast | Toast | Task assigned (FR-NOTIF-001) | Global, persists across screens for short duration | P0 |
 
 ---
 
 ## 7. Content & Tone
 
 ### Voice & Tone
-- **Overall Tone**: Professional, clear, concise, and encouraging. Aims for a friendly but efficient user experience.
-- **Error Messages**: Helpful, non-blaming, actionable, and specific where possible. Avoid jargon.
-- **Empty States**: Encouraging, guiding the user on how to get started, with clear calls-to-action (CTAs).
-- **Success Messages**: Brief, positive, and acknowledge the completion of an action, often suggesting next steps.
+- **Overall Tone**: Professional, Direct, Empowering, and Helpful. Focus on clarity and efficiency.
+- **Error Messages**: Concise, non-blaming, and actionable. Suggest next steps or alternative actions.
+- **Empty States**: Encouraging, guiding the user on how to get started (e.g., "You have no tasks yet. Click 'Create Task' to add your first one!"). Always include a clear Call to Action (CTA).
+- **Success Messages**: Brief, positive confirmation of action completion.
+- **Confirmation Messages**: Clear, explicit, stating the action and requiring explicit user confirmation for irreversible actions.
 
 ### Content Guidelines
 - **Headings**: Sentence case.
-- **CTAs**: Action-oriented, specific verbs (e.g., "Create Task", "Save Changes", "Delete Task", "Assign").
-- **Labels**: Concise, descriptive, and positioned clearly with their associated input fields.
-- **Placeholder Text**: Provide helpful examples or format guidance, not "Lorem ipsum" in final designs.
+- **CTAs**: Action-oriented verbs (e.g., "Create Task", "Save Changes", "Assign Task", "Delete Task"). Avoid generic "Submit" or "Click Here".
+- **Labels**: Concise, descriptive, always associated with their respective input fields.
+- **Placeholder Text**: Provide helpful examples or format guidance (e.g., "Enter task title", "your.email@example.com"). Avoid "Lorem ipsum".
 
 ---
 
 ## 8. Data & Edge Cases
 
 ### Data Scenarios
-| Scenario          | Description                             | Handling                                         |
-|-------------------|-----------------------------------------|--------------------------------------------------|
-| No Data (Dashboard)| User has no tasks created or assigned   | SCR-003/Empty state: Illustration, message, "Create New Task" CTA. |
-| First Use         | New user logs in for the first time     | SCR-003/Empty state serves as initial onboarding.|
-| Large Data (Tasks)| User has many tasks (e.g., 50+)         | Pagination or infinite scroll for task lists (design for up to 100+ items). |
-| Slow Connection   | Network latency >3 seconds              | Skeleton screens for SCR-003, SCR-005. Inline spinners for form submissions. |
-| Offline           | No network connectivity                 | Graceful degradation (e.g., show cached data if applicable, "No Internet Connection" message). |
+| Scenario | Description | Handling |
+|----------|-------------|----------|
+| No Data | User has no tasks assigned or created. | SCR-003/Empty state: Display an encouraging message with a prominent "Create Task" CTA. |
+| First Use | New user, no existing tasks or activity. | Similar to 'No Data', the SCR-003/Empty state guides the user to create their first task. |
+| Large Data | 100+ tasks visible on dashboard. | SCR-003: Implement pagination (e.g., 20 items per page) or infinite scroll (if tested for performance) to manage display. |
+| Slow Connection | Network latency >3s. | ALL: Display Skeleton screens (e.g., for SCR-003) or inline spinners (for form submissions) to indicate loading, preserving layout. |
+| Offline | User loses network connectivity. | Display a global "Offline" banner/toast. For critical actions, provide feedback that action cannot be completed without connection. (MVP: Focus on online experience, gracefully degrade). |
 
 ### Edge Cases
-| Case                | Screen(s) Affected           | Solution                                         |
-|---------------------|------------------------------|--------------------------------------------------|
-| Long Task Title     | SCR-003, SCR-004, SCR-005    | Truncation with ellipsis (`...`) and tooltip on hover for full text. |
-| Long Description    | SCR-005                      | Expandable text area or scrollable content.      |
-| Missing Assignee    | SCR-003, SCR-005             | "Unassigned" placeholder clearly displayed.      |
-| Form Validation     | SCR-001, SCR-002, SCR-004, SCR-005 | Inline error messages, red border highlighting invalid fields. |
-| Permission Denied   | SCR-005 (Edit/Delete)        | Disable relevant buttons/actions, or show "Access Denied" message if direct URL accessed without permission. |
+| Case | Screen(s) Affected | Solution |
+|------|-------------------|----------|
+| Long text | SCR-003 (Task title/description), SCR-005 (Task title/description) | Task titles on dashboard (SCR-003) will truncate with an ellipsis and display full text on hover (tooltip). Descriptions within forms/details (SCR-004, SCR-005) will auto-wrap. |
+| Missing image | N/A for MVP (no user-uploaded images). | For future use, implement a fallback placeholder icon/image. |
+| Form validation | SCR-001, SCR-002, SCR-004, SCR-005 | Inline error messages below fields, red border highlighting the invalid field. Display a summary error at the top for multiple issues. |
+| Session timeout | ALL authenticated screens | Upon API call returning authentication error, redirect user to SCR-002 (Login) with a message "Your session has expired. Please log in again." |
+| Permissions | SCR-003, SCR-005, FR-TASK-003, FR-TASK-005 | Display read-only view or disable edit/delete actions for tasks the user does not have permission for. |
+| Multiple Assignees | FR-TASK-002 | On SCR-003, display primary assignee and indicate "+X others". On SCR-005, list all assignees. |
 
 ---
 
@@ -208,9 +183,9 @@ TaskFlow
 *See `designsystem.md` for all design tokens (colors, typography, spacing, shadows, etc.)*
 
 ### Branding Assets
-- **Logo**: "TaskFlow" wordmark, clean sans-serif typography, potentially with a minimalist icon representing flow/tasks.
-- **Icon Style**: Outlined, simple, universally recognizable icons.
-- **Illustration Style**: Minimalist, geometric, functional, used primarily for empty states.
+- **Logo**: A simple, modern wordmark or icon+wordmark. Placeholder: `TaskFlow_Logo.svg`.
+- **Icon Style**: Outlined icons for general UI actions. Filled icons for active states or critical actions. Consistent stroke weight and corner radius.
+- **Illustration Style**: Minimalist, abstract, or geometric for empty states to convey clarity and simplicity, without being overly playful.
 - **Photography Style**: Not applicable for MVP.
 
 ---
@@ -223,28 +198,29 @@ TaskFlow
 **Source**: `.propel/context/docs/designsystem.md` (Component Specifications section)
 
 ### Required Components per Screen
-| Screen ID | Components Required                                | Notes                                            |
-|-----------|----------------------------------------------------|--------------------------------------------------|
-| SCR-001   | TextField (3), Button (1), Link (1)              | Name, Email, Password, Register, Login link      |
-| SCR-002   | TextField (2), Button (1), Link (1)              | Email, Password, Login, Register link            |
-| SCR-003   | Header (1), TaskCard (N) or Table (1), Button (1), Select (1) | App Header, list of tasks, "New Task" CTA, Status Filter |
-| SCR-004   | TextField (2), TextArea (1), Select (2), Button (2) | Task Title, Description, Status, Priority, Save, Cancel |
-| SCR-005   | Header (1), TextField (1), TextArea (1), Select (2), Button (4) | Task Title, Description, Status, Priority, Assign, Save, Delete, Complete |
+| Screen ID | Components Required | Notes |
+|-----------|---------------------|-------|
+| SCR-001 | TextField (3), PasswordField (2), Button (1), Link (1), Alert (1) | Name, Email, Password, Confirm Password. Register Button, Login Link. Error/Success Alert. |
+| SCR-002 | TextField (1), PasswordField (1), Button (1), Link (1), Alert (1) | Email, Password. Login Button, Forgot Password (future), Register Link. Error/Success Alert. |
+| SCR-003 | Header (1), Button (1), Table (1), Dropdown (1), TextField (1, for search) | Header with Logo, Create Task Button, User Menu. Task Table, Status Filter Dropdown, Optional Search Field. Notification Toast/Badge. |
+| SCR-004 | TextField (1), TextArea (1), Select (2), Button (2), Alert (1) | Title, Description. Status Dropdown, Priority Dropdown. Save Task Button, Cancel Button. Error/Success Alert. |
+| SCR-005 | Header (1), TextField (1), TextArea (1), Select (2), Button (3), Link (1), Confirmation Modal (1), Assign Task Modal (1), Alert (1) | Header. Editable Title, Description. Status Dropdown, Priority Dropdown. Save, Cancel, Delete Buttons. Assign To Link. Delete Confirmation Modal, Assign Task Modal. |
 
 ### Component Summary
-| Category    | Components                               | Variants                                       |
-|-------------|------------------------------------------|------------------------------------------------|
-| Actions     | Button, IconButton, Link                 | Primary, Secondary, Ghost, Danger x S/M/L x States |
-| Inputs      | TextField, TextArea, Select, Checkbox, Radio | States (Default, Focus, Error, Disabled)        |
-| Navigation  | Header                                   | App Header (Desktop), simplified (Mobile)       |
-| Content     | Card, Table, Avatar, Badge               | TaskCard, TaskTable (for Dashboard), StatusBadge |
-| Feedback    | Modal, Toast, Skeleton                   | Confirmation Modal, Success/Error Toast, Skeleton Loader |
+| Category | Components | Variants |
+|----------|------------|----------|
+| Actions | Button | Primary, Secondary, Tertiary, Ghost x S/M/L x Default/Hover/Focus/Active/Disabled/Loading |
+| Inputs | TextField, PasswordField, TextArea, Select | Default/Focus/Error/Disabled x S/M/L |
+| Navigation | Header | Default layout for web/tablet |
+| Content | Table, Card (for individual task display if not tabular) | Standard for tasks, flexible content |
+| Feedback | Modal, Toast, Alert, Skeleton Loader | Confirmation, Notification, Error/Success/Info, Content loading |
+| Layout | Container, Grid, Stack | For structuring content and responsive layouts |
 
 ### Component Constraints
 - Use only components from designsystem.md.
-- No custom components without explicit approval and documentation in designsystem.md.
+- No custom components without explicit approval after design review.
 - All components must support all defined states (Default, Hover, Focus, Active, Disabled, Loading).
-- Follow naming convention: `C/<Category>/<Name>`.
+- Follow naming convention: `C/<Category>/<Name>` in Figma.
 
 ---
 
@@ -252,342 +228,225 @@ TaskFlow
 
 *Flows derived from use cases in spec.md. Each flow notes which personas it covers.*
 
-### Flow: FL-001 - Register Account (Success)
+### Flow: FL-001 - User Registration
 **Flow ID**: FL-001
-**Derived From**: UC-001 (Main Flow)
+**Derived From**: UC-001
 **Personas Covered**: Team Member, Team Manager
-**Description**: User successfully registers a new account and is redirected to the login page.
+**Description**: User registers for a new TaskFlow account.
 
 #### Flow Sequence
 ```
-1. Entry: Register Account (SCR-001) / Default
-   - Trigger: User lands on registration page.
+1. Entry: SCR-001 / Default (Register Account)
+   - Trigger: User navigates to /register
    |
    v
-2. Step: Register Account (SCR-001) / Default (Form Filled)
-   - Action: User enters Name, Email, Password, confirms Password. Clicks "Register".
+2. Step: SCR-001 / Default (with input)
+   - Action: User fills Name, Email, Password, Confirm Password.
+   - Trigger: User clicks "Register"
    |
    v
-3. Step: System Processing / Loading
-   - Action: System validates and creates account (brief loading state).
-   |
-   v
-4. Exit: Login (SCR-002) / Default
-   - Action: Success message (e.g., Toast) followed by redirect to login.
+3. Decision Point (Validation):
+   +-- Success (UC-001 Main Flow) -> SCR-002 / Default (Login Page, success message)
+   +-- Email Exists (UC-001 AF-1.1) -> SCR-001 / Error (inline email error)
+   +-- Invalid Input (UC-001 AF-1.2) -> SCR-001 / Validation (inline field errors)
+   +-- System Error (UC-001 AF-1.3) -> SCR-001 / Error (global error message)
 ```
 
 #### Required Interactions
-- Form submission, showing loading state.
-- Success Toast message.
-- Page redirection.
+- Inline form validation feedback.
+- Loading spinner on "Register" button during submission.
+- Toast/Alert for success/failure after redirection.
 
-### Flow: FL-002 - Register Account (Email Already Exists)
+### Flow: FL-002 - User Login
 **Flow ID**: FL-002
-**Derived From**: UC-001 (AF-1.1)
+**Derived From**: FR-USER-002
 **Personas Covered**: Team Member, Team Manager
-**Description**: User attempts to register with an existing email, resulting in an inline error.
+**Description**: User logs into their TaskFlow account.
 
 #### Flow Sequence
 ```
-1. Entry: Register Account (SCR-001) / Default
-   - Trigger: User lands on registration page.
+1. Entry: SCR-002 / Default (Log In)
+   - Trigger: User navigates to /login or redirected from /register
    |
    v
-2. Step: Register Account (SCR-001) / Default (Form Filled)
-   - Action: User enters Name, Email (already exists), Password, confirms Password. Clicks "Register".
+2. Step: SCR-002 / Default (with input)
+   - Action: User fills Email, Password.
+   - Trigger: User clicks "Log In"
    |
    v
-3. Step: Register Account (SCR-001) / Error (Validation)
-   - Action: Inline error message "This email address is already in use." appears next to Email field.
+3. Decision Point (Authentication):
+   +-- Success (FR-USER-002 Main Flow) -> SCR-003 / Default (Task Dashboard)
+   +-- Incorrect Credentials (FR-USER-002 Alt Flow) -> SCR-002 / Error (global "Invalid credentials" error)
+   +-- System Error -> SCR-002 / Error (global "An unexpected error occurred" error)
 ```
 
 #### Required Interactions
-- Form submission.
-- Inline error display (color, message).
+- Loading spinner on "Log In" button during submission.
+- Error message for invalid credentials.
 
-### Flow: FL-003 - Login (Success)
+### Flow: FL-003 - Create New Task
 **Flow ID**: FL-003
-**Derived From**: FR-USER-002 (Main Flow)
+**Derived From**: UC-002, FR-TASK-001
 **Personas Covered**: Team Member, Team Manager
-**Description**: User successfully logs into the system and is redirected to the Dashboard.
+**Description**: User creates a new task with title, description, status, and priority.
 
 #### Flow Sequence
 ```
-1. Entry: Login (SCR-002) / Default
-   - Trigger: User lands on login page.
+1. Entry: SCR-003 / Default (Task Dashboard)
+   - Trigger: User clicks "Create Task" button in header
    |
    v
-2. Step: Login (SCR-002) / Default (Form Filled)
-   - Action: User enters registered Email and Password. Clicks "Login".
+2. Step: SCR-004 / Default (Create Task Form)
+   - Action: User fills Title, Description, selects Status and Priority.
+   - Trigger: User clicks "Save Task"
    |
    v
-3. Step: System Processing / Loading
-   - Action: System authenticates user (brief loading state).
-   |
-   v
-4. Exit: Dashboard (SCR-003) / Default
-   - Action: Redirect to the main task dashboard.
+3. Decision Point (Validation):
+   +-- Success (UC-002 Main Flow) -> SCR-003 / Default (Task Dashboard, new task visible, success toast)
+   +-- Missing Title (UC-002 AF-2.1) -> SCR-004 / Validation (inline title error)
+   +-- System Error (UC-002 AF-2.2) -> SCR-004 / Error (global error message)
 ```
 
 #### Required Interactions
-- Form submission, showing loading state.
-- Page redirection.
+- Inline form validation.
+- Loading spinner on "Save Task" button.
+- Success toast on dashboard after redirection.
 
-### Flow: FL-004 - Login (Invalid Credentials)
+### Flow: FL-004 - Manage Existing Task
 **Flow ID**: FL-004
-**Derived From**: FR-USER-002 (AF-Incorrect Credentials)
+**Derived From**: FR-TASK-002, FR-TASK-003, FR-TASK-004, FR-TASK-005
 **Personas Covered**: Team Member, Team Manager
-**Description**: User attempts to log in with incorrect credentials, resulting in a generic error.
+**Description**: User modifies, assigns, marks complete, or deletes an existing task.
 
 #### Flow Sequence
 ```
-1. Entry: Login (SCR-002) / Default
-   - Trigger: User lands on login page.
+1. Entry: SCR-003 / Default (Task Dashboard)
+   - Trigger: User clicks on a task title or an "Edit" action from dashboard context menu.
    |
    v
-2. Step: Login (SCR-002) / Default (Form Filled)
-   - Action: User enters incorrect Email or Password. Clicks "Login".
+2. Step: SCR-005 / Default (Task Detail / Edit)
+   - Action: User modifies fields (FR-TASK-003), clicks "Assign To" (FR-TASK-002), or clicks "Delete" (FR-TASK-005).
+   - Trigger: User clicks "Save Changes", "Assign Task" (in modal), "Mark Complete", or "Delete".
    |
    v
-3. Step: Login (SCR-002) / Error
-   - Action: Global error message "Invalid credentials" appears (e.g., at top of form or via Toast).
+3. Decision Point (Action Type):
+   +-- Save Changes (FR-TASK-003):
+   |   +-- Success -> SCR-003 / Default (Dashboard, updated task, success toast)
+   |   +-- Invalid Input -> SCR-005 / Validation (inline errors)
+   |   +-- System Error -> SCR-005 / Error (global error)
+   |
+   +-- Assign Task (FR-TASK-002, via Assign Task Modal):
+   |   +-- Success -> SCR-005 / Default (Task Detail, updated assignees, success toast, triggers FR-NOTIF-001)
+   |   +-- No User Selected -> Assign Task Modal / Validation
+   |   +-- System Error -> Assign Task Modal / Error
+   |
+   +-- Mark Complete (FR-TASK-004):
+   |   +-- Success -> SCR-003 / Default (Dashboard, status updated, success toast)
+   |   +-- System Error -> SCR-005 / Error (global error)
+   |
+   +-- Delete Task (FR-TASK-005):
+       - Trigger: User clicks "Delete" on SCR-005
+       |
+       v
+       Confirmation Modal / Default
+       - Trigger: User clicks "Confirm Delete"
+       |
+       v
+       +-- Success -> SCR-003 / Default (Dashboard, task removed, success toast)
+       +-- Cancel -> SCR-005 / Default
+       +-- System Error -> Confirmation Modal / Error (global error)
 ```
 
 #### Required Interactions
-- Form submission.
-- Error message display.
+- Loading states for all save/update/delete actions.
+- Confirmation dialog for delete actions.
+- Success/error toasts.
+- Searchable user list in Assign Task Modal.
+- Notification (toast/badge) when a task is assigned.
 
-### Flow: FL-005 - Create Task (Success)
+### Flow: FL-005 - View and Filter Tasks
 **Flow ID**: FL-005
-**Derived From**: UC-002, FR-TASK-001 (Main Flow)
-**Personas Covered**: Team Member, Team Manager
-**Description**: User successfully creates a new task and sees it on the Dashboard.
-
-#### Flow Sequence
-```
-1. Entry: Dashboard (SCR-003) / Default
-   - Trigger: User clicks "New Task" button.
-   |
-   v
-2. Step: Create Task (SCR-004) / Default
-   - Action: User fills Task Title, Description, selects Status and Priority. Clicks "Save Task".
-   |
-   v
-3. Step: System Processing / Loading
-   - Action: System creates task (brief loading state).
-   |
-   v
-4. Exit: Dashboard (SCR-003) / Default
-   - Action: Success message (Toast) and redirect back to Dashboard, showing the new task.
-```
-
-#### Required Interactions
-- Button click, form input, dropdown selection.
-- Loading state for form submission.
-- Success Toast.
-- Dashboard update.
-
-### Flow: FL-006 - Create Task (Missing Title)
-**Flow ID**: FL-006
-**Derived From**: UC-002 (AF-2.1), FR-TASK-001 (AF-Missing Title)
-**Personas Covered**: Team Member, Team Manager
-**Description**: User attempts to create a task without a title, resulting in an inline error.
-
-#### Flow Sequence
-```
-1. Entry: Create Task (SCR-004) / Default
-   - Trigger: User lands on create task form.
-   |
-   v
-2. Step: Create Task (SCR-004) / Default (Form Partially Filled)
-   - Action: User leaves Task Title empty, fills other fields. Clicks "Save Task".
-   |
-   v
-3. Step: Create Task (SCR-004) / Validation
-   - Action: Inline error message "Task Title is required." appears next to the Title field.
-```
-
-#### Required Interactions
-- Form submission.
-- Inline error display.
-
-### Flow: FL-007 - View and Filter Dashboard
-**Flow ID**: FL-007
 **Derived From**: FR-DASH-001, FR-DASH-002
 **Personas Covered**: Team Member, Team Manager
-**Description**: User views the dashboard and applies a filter.
+**Description**: User views their task dashboard and applies filters to narrow down the task list.
 
 #### Flow Sequence
 ```
-1. Entry: Dashboard (SCR-003) / Default
-   - Trigger: User logs in or navigates to Dashboard.
+1. Entry: SCR-003 / Default (Task Dashboard)
+   - Trigger: User logs in or navigates to dashboard
    |
    v
-2. Step: Dashboard (SCR-003) / Default (Viewing All Tasks)
-   - Action: User observes task list.
+2. Step: SCR-003 / Default (Task List Display)
+   - Action: User interacts with status filter dropdown.
+   - Trigger: User selects one or more statuses (e.g., 'Open', 'In Progress').
    |
    v
-3. Step: Dashboard (SCR-003) / Default (Filter Applied)
-   - Action: User selects "Status: Completed" from the filter options.
+3. Step: SCR-003 / Default (Filtered Task List)
+   - Action: Task list updates to show only filtered tasks.
+   - Trigger: User deselects filters.
    |
    v
-4. Exit: Dashboard (SCR-003) / Default (Filtered View)
-   - Action: Dashboard immediately updates to show only tasks with 'Completed' status.
+4. Exit: SCR-003 / Default (All relevant tasks displayed again).
 ```
 
 #### Required Interactions
-- Filter selection (e.g., checkbox, dropdown).
-- Immediate update of task list (visual feedback).
-
-### Flow: FL-008 - Edit Task (Change Status to Completed)
-**Flow ID**: FL-008
-**Derived From**: FR-TASK-004
-**Personas Covered**: Team Member, Team Manager
-**Description**: User quickly marks an existing task as completed from the dashboard.
-
-#### Flow Sequence
-```
-1. Entry: Dashboard (SCR-003) / Default
-   - Trigger: User views a task on the dashboard.
-   |
-   v
-2. Step: Dashboard (SCR-003) / Default (Task Selected)
-   - Action: User clicks the "Mark as Completed" button/checkbox associated with a specific task.
-   |
-   v
-3. Step: System Processing / Loading
-   - Action: System updates task status (brief inline loading for the specific task).
-   |
-   v
-4. Exit: Dashboard (SCR-003) / Default
-   - Action: The task's status visibly changes to 'Completed' on the dashboard.
-```
-
-#### Required Interactions
-- Quick action (button/checkbox click).
-- Inline loading/spinner for the specific task.
-- Immediate visual update of task status.
-
-### Flow: FL-009 - Assign Task
-**Flow ID**: FL-009
-**Derived From**: FR-TASK-002
-**Personas Covered**: Team Member, Team Manager
-**Description**: User assigns an existing task to another team member.
-
-#### Flow Sequence
-```
-1. Entry: Task Detail / Edit (SCR-005) / Default
-   - Trigger: User navigates to a task detail page.
-   |
-   v
-2. Step: Task Detail / Edit (SCR-005) / Default
-   - Action: User clicks "Assign To" button.
-   |
-   v
-3. Step: Assign Task Selector (Modal/Drawer) / Default
-   - Action: User searches for and selects one or more team members from the list. Clicks "Confirm Assignment".
-   |
-   v
-4. Step: System Processing / Loading
-   - Action: System updates assignment (brief loading state on modal).
-   |
-   v
-5. Exit: Task Detail / Edit (SCR-005) / Default
-   - Action: Success message (Toast), modal closes, assigned user(s) names appear on task detail.
-```
-
-#### Required Interactions
-- Button click to open modal/drawer.
-- Search input and selection from list.
-- Confirmation button.
-- Loading state for modal.
-- Success Toast and UI update.
-
-### Flow: FL-010 - Delete Task
-**Flow ID**: FL-010
-**Derived From**: FR-TASK-005
-**Personas Covered**: Team Member, Team Manager
-**Description**: User deletes an existing task with confirmation.
-
-#### Flow Sequence
-```
-1. Entry: Task Detail / Edit (SCR-005) / Default
-   - Trigger: User views a task detail page.
-   |
-   v
-2. Step: Task Detail / Edit (SCR-005) / Default
-   - Action: User clicks "Delete Task" button.
-   |
-   v
-3. Step: Confirm Delete Task (Modal) / Default
-   - Action: User sees confirmation message. Clicks "Confirm Delete".
-   |
-   v
-4. Step: System Processing / Loading
-   - Action: System deletes task (brief loading state on modal).
-   |
-   v
-5. Exit: Dashboard (SCR-003) / Default
-   - Action: Success message (Toast) and redirect to Dashboard; deleted task is no longer visible.
-```
-
-#### Required Interactions
-- Button click to open modal.
-- Confirmation button click.
-- Loading state for modal.
-- Success Toast.
-- Dashboard update and removal of task.
+- Instantaneous update of task list upon filter selection/deselection.
+- Visual indication of active filters.
+- Loading state (skeleton) for task list if filtering causes significant delay (e.g., fetching new data).
 
 ---
 
 ## 12. Export Requirements
 
 ### JPG Export Settings
-| Setting      | Value        |
-|--------------|--------------|
-| Format       | JPG          |
-| Quality      | High (85%)   |
-| Scale - Mobile | 2x           |
-| Scale - Web    | 2x           |
-| Color Profile| sRGB         |
+| Setting | Value |
+|---------|-------|
+| Format | JPG |
+| Quality | High (85%) |
+| Scale - Tablet | 1.5x (for 768px base) |
+| Scale - Web | 2x (for 1440px base) |
+| Color Profile | sRGB |
 
 ### Export Naming Convention
 `<AppName>__<Platform>__<ScreenName>__<State>__v<Version>.jpg`
 
 ### Export Manifest
-| Screen                | State       | Platform | Filename                                 |
-|-----------------------|-------------|----------|------------------------------------------|
-| Register Account      | Default     | Web      | TaskFlow__Web__RegisterAccount__Default__v1.jpg |
-| Register Account      | Loading     | Web      | TaskFlow__Web__RegisterAccount__Loading__v1.jpg |
-| Register Account      | Error       | Web      | TaskFlow__Web__RegisterAccount__Error__v1.jpg |
-| Register Account      | Validation  | Web      | TaskFlow__Web__RegisterAccount__Validation__v1.jpg |
-| Login                 | Default     | Web      | TaskFlow__Web__Login__Default__v1.jpg    |
-| Login                 | Loading     | Web      | TaskFlow__Web__Login__Loading__v1.jpg    |
-| Login                 | Error       | Web      | TaskFlow__Web__Login__Error__v1.jpg      |
-| Login                 | Validation  | Web      | TaskFlow__Web__Login__Validation__v1.jpg |
-| Dashboard             | Default     | Web      | TaskFlow__Web__Dashboard__Default__v1.jpg |
-| Dashboard             | Loading     | Web      | TaskFlow__Web__Dashboard__Loading__v1.jpg |
-| Dashboard             | Empty       | Web      | TaskFlow__Web__Dashboard__Empty__v1.jpg  |
-| Dashboard             | Error       | Web      | TaskFlow__Web__Dashboard__Error__v1.jpg  |
-| Create Task           | Default     | Web      | TaskFlow__Web__CreateTask__Default__v1.jpg |
-| Create Task           | Loading     | Web      | TaskFlow__Web__CreateTask__Loading__v1.jpg |
-| Create Task           | Error       | Web      | TaskFlow__Web__CreateTask__Error__v1.jpg |
-| Create Task           | Validation  | Web      | TaskFlow__Web__CreateTask__Validation__v1.jpg |
-| Task Detail / Edit    | Default     | Web      | TaskFlow__Web__TaskDetailEdit__Default__v1.jpg |
-| Task Detail / Edit    | Loading     | Web      | TaskFlow__Web__TaskDetailEdit__Loading__v1.jpg |
-| Task Detail / Edit    | Error       | Web      | TaskFlow__Web__TaskDetailEdit__Error__v1.jpg |
-| Task Detail / Edit    | Validation  | Web      | TaskFlow__Web__TaskDetailEdit__Validation__v1.jpg |
-| Register Account      | Default     | Mobile   | TaskFlow__Mobile__RegisterAccount__Default__v1.jpg |
-| Login                 | Default     | Mobile   | TaskFlow__Mobile__Login__Default__v1.jpg |
-| Dashboard             | Default     | Mobile   | TaskFlow__Mobile__Dashboard__Default__v1.jpg |
-| Create Task           | Default     | Mobile   | TaskFlow__Mobile__CreateTask__Default__v1.jpg |
-| Task Detail / Edit    | Default     | Mobile   | TaskFlow__Mobile__TaskDetailEdit__Default__v1.jpg |
-
+| Screen | State | Platform | Filename |
+|--------|-------|----------|----------|
+| Register Account | Default | Web | TaskFlow__Web__RegisterAccount__Default__v1.jpg |
+| Register Account | Loading | Web | TaskFlow__Web__RegisterAccount__Loading__v1.jpg |
+| Register Account | Error | Web | TaskFlow__Web__RegisterAccount__Error__v1.jpg |
+| Register Account | Validation | Web | TaskFlow__Web__RegisterAccount__Validation__v1.jpg |
+| Log In | Default | Web | TaskFlow__Web__Login__Default__v1.jpg |
+| Log In | Loading | Web | TaskFlow__Web__Login__Loading__v1.jpg |
+| Log In | Error | Web | TaskFlow__Web__Login__Error__v1.jpg |
+| Log In | Validation | Web | TaskFlow__Web__Login__Validation__v1.jpg |
+| Task Dashboard | Default | Web | TaskFlow__Web__TaskDashboard__Default__v1.jpg |
+| Task Dashboard | Loading | Web | TaskFlow__Web__TaskDashboard__Loading__v1.jpg |
+| Task Dashboard | Empty | Web | TaskFlow__Web__TaskDashboard__Empty__v1.jpg |
+| Task Dashboard | Error | Web | TaskFlow__Web__TaskDashboard__Error__v1.jpg |
+| Create Task Form | Default | Web | TaskFlow__Web__CreateTaskForm__Default__v1.jpg |
+| Create Task Form | Loading | Web | TaskFlow__Web__CreateTaskForm__Loading__v1.jpg |
+| Create Task Form | Error | Web | TaskFlow__Web__CreateTaskForm__Error__v1.jpg |
+| Create Task Form | Validation | Web | TaskFlow__Web__CreateTaskForm__Validation__v1.jpg |
+| Task Detail / Edit | Default | Web | TaskFlow__Web__TaskDetailEdit__Default__v1.jpg |
+| Task Detail / Edit | Loading | Web | TaskFlow__Web__TaskDetailEdit__Loading__v1.jpg |
+| Task Detail / Edit | Error | Web | TaskFlow__Web__TaskDetailEdit__Error__v1.jpg |
+| Task Detail / Edit | Validation | Web | TaskFlow__Web__TaskDetailEdit__Validation__v1.jpg |
+| Register Account | Default | Tablet | TaskFlow__Tablet__RegisterAccount__Default__v1.jpg |
+| Log In | Default | Tablet | TaskFlow__Tablet__Login__Default__v1.jpg |
+| Task Dashboard | Default | Tablet | TaskFlow__Tablet__TaskDashboard__Default__v1.jpg |
+| Create Task Form | Default | Tablet | TaskFlow__Tablet__CreateTaskForm__Default__v1.jpg |
+| Task Detail / Edit | Default | Tablet | TaskFlow__Tablet__TaskDetailEdit__Default__v1.jpg |
+| Confirmation Modal | Default | Web | TaskFlow__Web__ConfirmationModal__Default__v1.jpg |
+| Assign Task Modal | Default | Web | TaskFlow__Web__AssignTaskModal__Default__v1.jpg |
+| Notification Toast | Default | Web | TaskFlow__Web__NotificationToast__Default__v1.jpg |
 
 ### Total Export Count
-- **Screens**: 5
-- **States per screen**: 4-5 (4 for auth, 5 for dashboard/forms)
-- **Total JPGs**: Approximately 20 (Web) + 5 (Mobile) = 25
+- **Screens**: 5 core screens + 3 modals/overlays = 8 unique views
+- **States per screen**: 4-5 states per core screen (average 4.8), 1-2 states for modals/overlays.
+- **Platforms**: 2 (Web, Tablet)
+- **Total JPGs**: Approximately (5 * 4.8 + 3 * 1) * 2 = 57 JPGs (plus specific modal states as individual exports) = 25 for Web + 5 for Tablet + 3 modals * 1 state * 1 platform (as they are overlays on web base) = 33 exports for V1.
 
 ---
 
@@ -597,37 +456,33 @@ TaskFlow
 ```
 TaskFlow Figma File
 +-- 00_Cover
-|   +-- Project info, version, stakeholders
+|   +-- Project info, version, stakeholders, last updated
 +-- 01_Foundations
-|   +-- Color tokens (Light + Dark)
+|   +-- Color tokens (Light + Dark modes)
 |   +-- Typography scale
 |   +-- Spacing scale
 |   +-- Radius tokens
 |   +-- Elevation/shadows
-|   +-- Grid definitions (12-column responsive)
+|   +-- Grid definitions (Desktop: 12-col, Tablet: 8-col)
 +-- 02_Components
-|   +-- C/Actions/Button
-|   +-- C/Actions/IconButton
+|   +-- C/Actions/Button (Primary, Secondary, Ghost, Tertiary variants x S/M/L x all states)
 |   +-- C/Actions/Link
-|   +-- C/Inputs/TextField
-|   +-- C/Inputs/TextArea
-|   +-- C/Inputs/Select
-|   +-- C/Inputs/Checkbox
-|   +-- C/Inputs/Radio
-|   +-- C/Navigation/Header
-|   +-- C/Content/Card (TaskCard)
-|   +-- C/Content/Table (TaskTable)
-|   +-- C/Content/Badge (StatusBadge)
-|   +-- C/Feedback/Modal
-|   +-- C/Feedback/Toast
-|   +-- C/Feedback/Skeleton
+|   +-- C/Inputs/TextField (Default, Password, Email, TextArea variants x S/M/L x all states)
+|   +-- C/Inputs/Select (Default, variants x S/M/L x all states)
+|   +-- C/Navigation/Header (Web/Tablet variants)
+|   +-- C/Content/Table (Task Table variant)
+|   +-- C/Feedback/Modal (Confirmation, Assign Task variants x Default/Loading/Error)
+|   +-- C/Feedback/Toast (Success, Error, Info variants)
+|   +-- C/Feedback/Alert (Success, Error, Info variants)
+|   +-- C/Feedback/SkeletonLoader (for Table, Form)
+|   +-- C/Layout/Divider
 +-- 03_Patterns
-|   +-- Auth form pattern (Login, Register)
-|   +-- Task form pattern (Create, Edit)
-|   +-- Task list pattern (Dashboard table/cards)
-|   +-- Empty state pattern
-|   +-- Loading pattern (Skeletons)
-|   +-- Confirmation modal pattern
+|   +-- Auth Form Pattern (Login/Register layouts)
+|   +-- Task Item Pattern (for table rows or card items)
+|   +-- Filter Bar Pattern
+|   +-- Empty State Pattern
+|   +-- Error State Pattern
+|   +-- Loading State Pattern (Skeleton)
 +-- 04_Screens
 |   +-- RegisterAccount/Default
 |   +-- RegisterAccount/Loading
@@ -637,32 +492,30 @@ TaskFlow Figma File
 |   +-- Login/Loading
 |   +-- Login/Error
 |   +-- Login/Validation
-|   +-- Dashboard/Default
-|   +-- Dashboard/Loading
-|   +-- Dashboard/Empty
-|   +-- Dashboard/Error
-|   +-- CreateTask/Default
-|   +-- CreateTask/Loading
-|   +-- CreateTask/Error
-|   +-- CreateTask/Validation
+|   +-- TaskDashboard/Default
+|   +-- TaskDashboard/Loading
+|   +-- TaskDashboard/Empty
+|   +-- TaskDashboard/Error
+|   +-- CreateTaskForm/Default
+|   +-- CreateTaskForm/Loading
+|   +-- CreateTaskForm/Error
+|   +-- CreateTaskForm/Validation
 |   +-- TaskDetailEdit/Default
 |   +-- TaskDetailEdit/Loading
 |   +-- TaskDetailEdit/Error
 |   +-- TaskDetailEdit/Validation
 +-- 05_Prototype
-|   +-- Flow 1: FL-001 Register Account (Success)
-|   +-- Flow 2: FL-003 Login (Success)
-|   +-- Flow 3: FL-005 Create Task (Success)
-|   +-- Flow 4: FL-007 View and Filter Dashboard
-|   +-- Flow 5: FL-008 Edit Task (Change Status to Completed)
-|   +-- Flow 6: FL-009 Assign Task
-|   +-- Flow 7: FL-010 Delete Task
+|   +-- FL-001: User Registration
+|   +-- FL-002: User Login
+|   +-- FL-003: Create New Task
+|   +-- FL-004: Manage Existing Task
+|   +-- FL-005: View and Filter Tasks
 +-- 06_Handoff
-    +-- Token usage rules
-    +-- Component guidelines
-    +-- Responsive specs
-    +-- Edge cases
-    +-- Accessibility notes
+    +-- Token usage rules (how to apply design tokens)
+    +-- Component usage guidelines (props, variants, when to use)
+    +-- Responsive specs (breakpoint behavior, layout shifts)
+    +-- Edge cases (truncation, missing data, permissions)
+    +-- Accessibility notes (focus management, ARIA suggestions, contrast checks)
 ```
 
 ---
@@ -670,17 +523,108 @@ TaskFlow Figma File
 ## 14. Quality Checklist
 
 ### Pre-Export Validation
-- [X] All screens have required states (Default/Loading/Empty/Error/Validation where applicable)
-- [X] All components use design tokens (no hard-coded values)
-- [X] Color contrast meets WCAG AA (>=4.5:1 text, >=3:1 UI)
-- [X] Focus states defined for all interactive elements
-- [X] Touch targets >= 44x44px (mobile)
-- [X] Prototype flows wired and functional for key use cases
-- [X] Naming conventions followed for layers, frames, and components
-- [X] Export manifest complete
+- [x] All screens have required states (Default/Loading/Empty/Error/Validation, where applicable).
+- [x] All components use design tokens (no hard-coded values).
+- [x] Color contrast meets WCAG AA (>=4.5:1 text, >=3:1 UI).
+- [x] Focus states defined for all interactive elements.
+- [x] Touch targets >= 44x44px for all interactive elements (even on tablet for larger finger targets).
+- [x] Prototype flows wired and functional for all core user journeys.
+- [x] Naming conventions followed for frames, components, and layers.
+- [x] Export manifest complete and accurate.
 
 ### Post-Generation
-- [X] designsystem.md updated with Figma references
-- [X] Export manifest generated
-- [X] JPG files named correctly
-- [X] Handoff documentation complete
+- [x] `designsystem.md` updated with Figma references.
+- [x] Export manifest generated.
+- [x] JPG files named correctly.
+- [x] Handoff documentation complete with all required sections.
+- [x] All UXR are accounted for in the design.
+
+---
+## 15. Responsive Design Breakpoints
+
+**Target Platforms**: Desktop & Tablet (NFR-USABILITY-001)
+
+### Breakpoint Definitions
+| Name | Min Width | Max Width | Grid Columns | Layout Adaptations |
+|------|-----------|-----------|--------------|--------------------|
+| Tablet | 768px | 1023px | 8 columns | Navigation: Header remains, potentially condensed. Task Dashboard: Card view or condensed table view. Forms: Stacked inputs. |
+| Desktop Small | 1024px | 1439px | 12 columns | Navigation: Full header. Task Dashboard: Table view with more columns. Forms: Two-column layouts possible. |
+| Desktop Large | 1440px | - | 12 columns | Optimized for wider content, increased white space, full task table with all details. |
+
+### Layout Adaptations
+- **Header**: Consistent across all breakpoints. Logo and key actions (Create Task, User Menu). Content adjusts spacing.
+- **Forms (Register, Login, Create Task, Task Detail)**:
+    - **Tablet**: All form fields stack vertically. Buttons span full width.
+    - **Desktop**: Forms can utilize a two-column grid for better horizontal space distribution where logical (e.g., Status and Priority side-by-side).
+- **Task Dashboard (SCR-003)**:
+    - **Tablet**: Task list defaults to a simplified card view or a table with fewer columns, prioritizing key info (title, status, assignee). Horizontal scrolling may be introduced for detail columns. Filtering controls may switch to a bottom sheet or modal.
+    - **Desktop**: Full table view, displaying all task properties (title, description snippet, status, priority, assignee, created by). Filtering controls remain visible inline.
+- **Modals/Overlays**:
+    - **Tablet**: Modals take up a larger percentage of the screen width, potentially 90% width. Drawers slide in from 100% width.
+    - **Desktop**: Modals are centered, with a fixed max-width. Drawers slide in with a fixed width.
+
+---
+## 16. Accessibility Requirements (WCAG Compliance)
+
+This section details the WCAG 2.2 Level AA accessibility requirements that will be strictly adhered to in the Figma designs.
+
+### General Accessibility Principles
+- **Perceivable**: Information and user interface components must be presentable to users in ways they can perceive.
+- **Operable**: User interface components and navigation must be operable.
+- **Understandable**: Information and the operation of user interface must be understandable.
+- **Robust**: Content must be robust enough that it can be interpreted by a wide variety of user agents, including assistive technologies.
+
+### Detailed Requirements
+
+1.  **Color Contrast (WCAG 1.4.3 & 1.4.11)**
+    *   **Text Contrast**: All standard text (normal size) MUST have a contrast ratio of at least 4.5:1 against its background. Large text (18pt+ regular or 14pt+ bold) MUST have a contrast ratio of at least 3:1.
+    *   **Non-Text Contrast**: All interactive UI components (buttons, input borders, icons, focus indicators) and meaningful graphics MUST have a contrast ratio of at least 3:1 against adjacent colors.
+    *   **Information Not by Color Alone**: Color MUST NOT be the only means of conveying information, indicating an action, prompting a response, or distinguishing a visual element (e.g., form errors use color AND text/icon).
+
+2.  **Keyboard Operability (WCAG 2.1.1, 2.1.2, 2.1.4)**
+    *   All functionality MUST be operable through a keyboard interface without requiring specific timings for individual keystrokes.
+    *   **Focus Order**: Keyboard navigation (Tab key) MUST follow a logical and predictable order that makes sense to the user (left-to-right, top-to-bottom reading order).
+    *   **Visible Focus Indicator**: All interactive elements (buttons, links, form fields, filter options) MUST display a clear and high-contrast visual focus indicator when tabbed to. The focus indicator MUST meet 3:1 contrast ratio against the component's default state and be at least 2px thick.
+    *   **No Keyboard Traps**: Focus MUST NOT be trapped within any sub-section of content. Users must be able to move focus away from any component using only a keyboard.
+
+3.  **Form Accessibility (WCAG 1.3.1, 3.3.1, 3.3.2)**
+    *   **Labels**: All input fields (text, password, text area, select) MUST have a programmatically associated `<label>` element. Placeholder text is not a substitute for a label.
+    *   **Error Identification**: Form validation errors MUST be clearly identified to the user. This includes visual indication (e.g., red border, error icon) AND text-based error messages (inline and/or summarized at the top of the form).
+    *   **Error Suggestion**: Where input errors are detected and suggestions for correction are known, these suggestions MUST be provided (e.g., "Email already exists. Try logging in.").
+    *   **Required Fields**: Required fields MUST be visually indicated (e.g., an asterisk and `(required)` in the label) and programmatically identified using `aria-required="true"`.
+
+4.  **Semantic Structure (WCAG 1.3.1)**
+    *   Use appropriate semantic HTML5 elements where possible (e.g., `<header>`, `<nav>`, `<main>`, `<footer>`, `<button>`, `<input>`, `<table>`).
+    *   For custom interactive components or regions, appropriate ARIA roles, states, and properties (`role`, `aria-label`, `aria-labelledby`, `aria-describedby`, `aria-current`, etc.) will be specified.
+
+5.  **Image Accessibility (WCAG 1.1.1)**
+    *   **Alt Text**: All `img` elements that convey information MUST have descriptive `alt` text.
+    *   **Decorative Images**: Images that are purely decorative and convey no information MUST have empty `alt=""` attributes or be hidden from assistive technologies (`aria-hidden="true"`).
+
+6.  **Navigation and Orientation (WCAG 2.4.1, 2.4.4, 2.4.5, 2.4.6)**
+    *   **Page Titles**: Each screen MUST have a unique and descriptive title (e.g., `<title>TaskFlow - Task Dashboard</title>`).
+    *   **Link Purpose**: The purpose of each link MUST be clear from its text or context. Avoid generic link text like "click here."
+    *   **Headings**: Use a logical heading structure (`<h1>` to `<h6>`) to convey content hierarchy.
+    *   **Landmark Regions**: Use HTML5 landmark elements (`<main>`, `<nav>`, `<aside>`, `<header>`, `<footer>`) or ARIA roles to define regions of the page.
+
+7.  **Time-based Media (WCAG 2.2.1, 2.2.2)**
+    *   Any content that moves, blinks, scrolls, or automatically updates for more than five seconds MUST have a mechanism for users to pause, stop, or hide it. (Applies to notifications, carousels, etc.).
+    *   Auto-updating content (e.g., new task notifications) MUST have a mechanism to pause or adjust the timing of the refresh.
+
+8.  **Responsive Design (WCAG 1.4.10)**
+    *   Content MUST reflow gracefully at various screen sizes without loss of information or functionality, and without requiring two-dimensional scrolling. Text MUST be resizable up to 200% without loss of content or functionality.
+
+9.  **User Preferences (WCAG 2.3.3)**
+    *   The design MUST honor user preferences such as `prefers-reduced-motion` to minimize animations and transitions for users sensitive to motion.
+
+### Figma Annotations
+For handoff, specific annotations will be included in Figma:
+- **Focus Order**: Numbered annotations indicating keyboard tab sequence.
+- **ARIA Suggestions**: Notes on specific `aria-label`, `role`, `aria-current`, etc., for custom components.
+- **Heading Levels**: Text annotations for `<h1>`, `<h2>`, etc., for screen titles and major sections.
+- **Error States**: Detailed descriptions of error message association and visual treatment.
+- **Contrast Ratios**: Notes on critical text and UI elements confirming contrast ratios.
+- **Touch Targets**: Callouts for mobile/tablet interactive elements confirming 44x44px minimum.
+- **Motion Spec**: Detailed timing and easing for interactive feedback and transitions.
+
+By systematically addressing these requirements during the design process, TaskFlow will achieve WCAG 2.2 Level AA compliance, providing an inclusive and usable experience for all users.
