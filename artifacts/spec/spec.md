@@ -1,458 +1,392 @@
+This Product Specification document translates the TaskFlow Business Requirements Document (BRD) into detailed, actionable requirements for the development team. It outlines the system's purpose, functional and non-functional specifications, and critical success criteria, ensuring alignment with business objectives.
+
+---
+
 # Product Specification: TaskFlow – Simple Team Task Management System
+
+**Version:** 1.0
+**Date:** October 26, 2023
+**Author:** Senior Product Manager
 
 ---
 
 ## 1. Executive Summary
 
-This document outlines the product specification for "TaskFlow," a lightweight web application designed to streamline task management for small teams. The current landscape often sees teams grappling with disparate tools like email and spreadsheets, leading to poor task visibility, unclear accountability, and reduced collaboration. TaskFlow aims to solve this by providing a centralized, easy-to-use platform for task creation, assignment, and tracking.
-
-The system will focus on core functionalities such as secure user authentication, comprehensive task management (create, edit, delete, complete), task assignment to team members, a central dashboard for task visibility, and a simple notification system. By delivering these features within a 3-month timeframe, TaskFlow will significantly improve team productivity, provide clear accountability, and enable managers to track progress effortlessly, thereby reducing reliance on inefficient, manual tracking methods.
-
----
+TaskFlow is a lightweight web application designed to enhance productivity and collaboration for small teams by centralizing task management. It aims to reduce reliance on disparate tools like email and spreadsheets, offering a single platform for task creation, assignment, tracking, and basic notifications. This specification details the core functionalities, performance benchmarks, security measures, and usability standards required to deliver a simple, efficient, and secure task management solution within a three-month initial release timeline.
 
 ## 2. Goals and Objectives
 
-### 2.1. Project Goal
+### 2.1 Project Goal
+The primary goal of TaskFlow is to provide a lightweight web application where small teams can efficiently create, assign, and track tasks. The system MUST improve collaboration and task visibility within teams while maintaining a simple and easy-to-use interface.
 
-The primary goal of TaskFlow is to provide a lightweight web application where small teams can create, assign, and track tasks efficiently. The system SHALL improve collaboration and task visibility within teams while keeping the interface simple and easy to use.
-
-### 2.2. Business Objectives
-
-The project MUST achieve the following business objectives:
-
-*   **Improve team productivity:** By organizing tasks in one centralized platform, teams SHALL experience increased efficiency.
-*   **Allow managers to track task progress easily:** Managers SHALL have clear insights into task statuses and team workloads.
-*   **Provide clear accountability:** Through explicit task assignments, individual responsibilities SHALL be unambiguous.
-*   **Reduce reliance on email or spreadsheets for task tracking:** The system SHALL serve as the primary source of truth for task management, minimizing the need for external, less efficient tools.
-
-### 2.3. Success Criteria
-
-The project will be considered successful if:
-
-*   **Task Management Ease:** Users MUST be able to create, assign, and manage tasks easily, demonstrated by at least 90% of users successfully completing these core actions within 5 minutes of initial training.
-*   **Task Completion Improvement:** Team task completion rates MUST improve by at least 15% within three months of system adoption.
-*   **System Adoption:** System adoption MUST reach at least 80% of target users within one month of the initial release.
-
----
+### 2.2 Business Objectives
+1.  **P1: Improve team productivity by organizing tasks in one platform.**
+    *   *Success Metric:* 80% of target users actively using TaskFlow for daily task management.
+2.  **P1: Allow managers to track task progress easily.**
+    *   *Success Metric:* Managers report a 30% reduction in time spent tracking team tasks manually.
+3.  **P1: Provide clear accountability through task assignments.**
+    *   *Success Metric:* Tasks assigned in TaskFlow have a clear assignee in 95% of cases.
+4.  **P2: Reduce reliance on email or spreadsheets for task tracking.**
+    *   *Success Metric:* A 50% decrease in task-related email threads and spreadsheet usage reported by target teams.
 
 ## 3. Target Users
 
-TaskFlow is designed for small teams (fewer than 50 members) operating within collaborative environments. The primary target users fall into two main categories:
-
-### 3.1. Team Member (Executor)
-
-*   **Description:** An individual within a team responsible for executing assigned tasks.
-*   **Goals:**
-    *   Efficiently receive and understand assigned tasks.
-    *   Easily update the status of tasks they are working on.
-    *   View their personal list of tasks and their progress.
-    *   Receive notifications for new assignments.
-*   **Characteristics:** Seeks clarity, simplicity, and efficiency in managing their workload. May not be responsible for assigning tasks but needs a clear way to see and update their own.
-*   **Typical Tasks:** Logging in, viewing tasks, marking tasks as completed, editing task descriptions (if permitted).
-
-### 3.2. Team Lead / Manager (Assigner & Overseer)
-
-*   **Description:** An individual responsible for overseeing a team's work, assigning tasks, and tracking overall progress.
-*   **Goals:**
-    *   Create new tasks and assign them to team members.
-    *   Gain a clear overview of all tasks within the team.
-    *   Monitor the progress and status of assigned tasks.
-    *   Ensure accountability and identify bottlenecks.
-*   **Characteristics:** Requires visibility, control over task allocation, and tools for progress tracking.
-*   **Typical Tasks:** Logging in, creating new tasks, assigning tasks, editing tasks, deleting tasks, viewing the dashboard, filtering tasks.
-
----
+The primary target users for TaskFlow are:
+*   **Team Members:** Individuals responsible for creating, managing, and completing tasks within a small team.
+*   **Team Managers/Leaders:** Individuals responsible for overseeing team progress, assigning tasks, and monitoring overall task completion.
+*   **New Users:** Individuals new to a team or the platform who need to quickly onboard and begin managing tasks.
 
 ## 4. Functional Requirements (FR)
 
-### 4.1. User Management & Authentication
+This section details the specific features and functionalities the TaskFlow system SHALL provide.
 
-#### FR-UM.01: User Registration
-*   **Description:** Users MUST be able to register and create a unique account within the TaskFlow system.
+### 4.1 User Management
+**FR-001: User Registration** [DETERMINISTIC]
+*   The system SHALL allow new users to register and create an account.
 *   **Acceptance Criteria:**
-    *   UM.01.1: The system SHALL present a user registration form requiring a unique email address, name, and password.
-    *   UM.01.2: Upon successful submission of valid and unique credentials, the system SHALL create a new user account.
-    *   UM.01.3: The system SHALL store the user's password securely using hashing algorithms as specified in NFR-SEC.01.
-    *   UM.01.4: The system SHALL display a confirmation message upon successful registration and redirect the user to the login page.
-    *   UM.01.5: The system SHALL prevent registration with an email address already registered, providing an appropriate error message.
-*   **Tag:** [DETERMINISTIC]
+    *   MUST provide a registration form requiring email, name, and password.
+    *   MUST validate email format upon submission.
+    *   MUST validate password strength (e.g., minimum 8 characters, alphanumeric).
+    *   MUST create a unique `user_id` upon successful registration.
+    *   MUST store `name`, `email`, `password_hash`, and `created_at` in the `User` table.
+    *   MUST notify the user of successful registration.
 
-#### FR-UM.02: User Login
-*   **Description:** Users MUST be able to log in securely to their TaskFlow account.
+**FR-002: User Login** [DETERMINISTIC]
+*   The system SHALL allow registered users to log in securely.
 *   **Acceptance Criteria:**
-    *   UM.02.1: The system SHALL present a login form requiring a registered email address and password.
-    *   UM.02.2: Upon successful authentication with valid credentials, the system SHALL grant access to the user's dashboard.
-    *   UM.02.3: The system SHALL utilize JWT-based authentication for secure session management.
-    *   UM.02.4: The system SHALL use HTTPS for all communication during the login process as per NFR-SEC.02.
-    *   UM.02.5: The system SHALL display an error message for invalid login attempts (e.g., incorrect email or password).
-*   **Tag:** [DETERMINISTIC]
+    *   MUST provide a login form requiring email and password.
+    *   MUST authenticate users against securely stored credentials (`password_hash`).
+    *   MUST issue a JSON Web Token (JWT) upon successful authentication.
+    *   MUST redirect the user to the main dashboard upon successful login.
+    *   MUST display an error message for invalid credentials.
 
-### 4.2. Task Management
-
-#### FR-TM.01: Create New Tasks
-*   **Description:** Users MUST be able to create new tasks within the system.
+### 4.2 Task Management
+**FR-003: Task Creation** [DETERMINISTIC]
+*   Users SHALL be able to create new tasks.
 *   **Acceptance Criteria:**
-    *   TM.01.1: The system SHALL provide an interface for users to input a task title, description, priority (e.g., Low, Medium, High), and initial status (e.g., To Do).
-    *   TM.01.2: Task titles MUST be a minimum of 3 characters and a maximum of 255 characters.
-    *   TM.01.3: Upon successful creation, the system SHALL assign a unique `task_id` and record the `created_by` user and `created_at` timestamp.
-    *   TM.01.4: The newly created task SHALL be visible on the dashboard (FR-VIZ.01) of the creating user and all team members.
-*   **Tag:** [DETERMINISTIC]
+    *   MUST provide a form or modal for task creation.
+    *   MUST allow users to input a `title` (required, max 255 chars).
+    *   MUST allow users to input a `description` (optional, max 1000 chars).
+    *   MUST allow users to select a `priority` (e.g., Low, Medium, High – default Medium).
+    *   MUST set the initial `status` to "Pending".
+    *   MUST record the `created_by` user's `user_id` and `created_at` timestamp.
+    *   MUST store the task details in the `Task` table.
 
-#### FR-TM.02: Edit Existing Tasks
-*   **Description:** Users MUST be able to edit existing tasks they have created or have permissions to modify.
+**FR-004: Task Assignment** [DETERMINISTIC]
+*   Users SHALL be able to assign tasks to team members.
 *   **Acceptance Criteria:**
-    *   TM.02.1: The system SHALL allow users to modify the task title, description, priority, and status of an existing task.
-    *   TM.02.2: Any changes made to a task MUST be immediately reflected on the dashboard (FR-VIZ.01).
-    *   TM.02.3: The system SHALL only permit the user who created the task or a designated "manager" role (future enhancement) to edit a task.
-    *   TM.02.4: The system SHALL provide a clear "Save" or "Update" button to apply changes and display a confirmation message upon successful update.
-*   **Tag:** [DETERMINISTIC]
+    *   MUST provide a mechanism (e.g., dropdown, search) to select an existing registered team member (by `user_id`) for a task.
+    *   MUST allow a task to be assigned to only one user at a time.
+    *   MUST record the `task_id`, `user_id`, and `assigned_at` timestamp in the `Assignment` table.
+    *   MUST update the `Task` entity to reflect the current assignee.
 
-#### FR-TM.03: Delete Tasks
-*   **Description:** Users MUST be able to delete tasks they have created.
+**FR-005: Task Editing** [DETERMINISTIC]
+*   Users SHALL be able to edit existing tasks.
 *   **Acceptance Criteria:**
-    *   TM.03.1: The system SHALL provide an option to delete an existing task.
-    *   TM.03.2: Upon confirmation, the system SHALL permanently remove the task and all associated assignments from the database.
-    *   TM.03.3: The system SHALL only permit the user who created the task or a designated "manager" role (future enhancement) to delete a task.
-    *   TM.03.4: The system SHALL display a confirmation prompt before permanent deletion to prevent accidental loss of data.
-*   **Tag:** [DETERMINISTIC]
+    *   MUST allow the original creator or assignee to modify the `title`, `description`, and `priority` of a task.
+    *   MUST prevent modification of `task_id`, `created_by`, and `created_at`.
+    *   MUST display current task details in an editable form.
+    *   MUST update the `Task` table with the new details upon saving.
 
-#### FR-TM.04: Mark Tasks as Completed
-*   **Description:** Users MUST be able to mark tasks as completed.
+**FR-006: Task Status Tracking** [DETERMINISTIC]
+*   Users SHALL be able to mark tasks as completed.
 *   **Acceptance Criteria:**
-    *   TM.04.1: The system SHALL provide a clear mechanism (e.g., button, checkbox) to change a task's status to "Completed".
-    *   TM.04.2: Upon marking a task as completed, its status field in the database MUST be updated to "Completed".
-    *   TM.04.3: The dashboard (FR-VIZ.01) MUST immediately reflect the updated status of the task.
-*   **Tag:** [DETERMINISTIC]
+    *   MUST provide a clear action (e.g., button, checkbox) to change a task's `status` to "Completed".
+    *   MUST ensure only the assignee or task creator can mark a task as completed.
+    *   MUST update the `status` field in the `Task` table.
 
-### 4.3. Team Collaboration & Assignment
-
-#### FR-COL.01: Assign Tasks to Team Members
-*   **Description:** Users MUST be able to assign tasks to one or more team members.
+**FR-007: Task Deletion** [DETERMINISTIC]
+*   Users SHALL be able to delete tasks.
 *   **Acceptance Criteria:**
-    *   COL.01.1: When creating or editing a task, the system SHALL provide a dropdown or search interface to select existing registered users for assignment.
-    *   COL.01.2: Upon assignment, an entry MUST be created in the `Assignment` table linking the `task_id` to the `user_id` of the assigned member, along with `assigned_at` timestamp.
-    *   COL.01.3: A task can be assigned to multiple users.
-    *   COL.01.4: The assigned user(s) MUST receive a notification (FR-NOT.01).
-    *   COL.01.5: The assignment SHALL be visible on the task details view and the dashboard (FR-VIZ.01).
-*   **Tag:** [DETERMINISTIC]
+    *   MUST provide a clear action (e.g., delete button) for tasks.
+    *   MUST prompt the user for confirmation before permanent deletion.
+    *   MUST allow only the original creator of the task to delete it.
+    *   MUST remove the task from the `Task` table.
+    *   MUST also remove associated entries from the `Assignment` table.
 
-### 4.4. Task Visibility & Dashboard
-
-#### FR-VIZ.01: Display Dashboard of All Tasks
-*   **Description:** The system MUST display a dashboard showing all tasks accessible to the logged-in user.
+### 4.3 Dashboard & Task Visibility
+**FR-008: Dashboard Display** [DETERMINISTIC]
+*   The system SHALL display a dashboard of all tasks relevant to the logged-in user's team.
 *   **Acceptance Criteria:**
-    *   VIZ.01.1: Upon login, the user SHALL be redirected to a dashboard displaying a list of tasks.
-    *   VIZ.01.2: The dashboard MUST display task title, description (truncated if long), current status, priority, who it's assigned to, and creator.
-    *   VIZ.01.3: The dashboard MUST update in real-time or near real-time (within 5 seconds) as tasks are created, edited, or assigned.
-    *   VIZ.01.4: Each task entry on the dashboard MUST be clickable to view full task details.
-*   **Tag:** [DETERMINISTIC]
+    *   MUST display a list of tasks including `title`, `status`, `priority`, and `assignee`.
+    *   MUST default to showing all tasks.
+    *   MUST be accessible immediately after login.
+    *   MUST refresh task list automatically or on user request to reflect latest changes.
 
-#### FR-VIZ.02: Filter Tasks by Status
-*   **Description:** Users MUST be able to filter tasks displayed on the dashboard by their status.
+**FR-009: Task Filtering** [DETERMINISTIC]
+*   Users SHALL be able to filter tasks by status on the dashboard.
 *   **Acceptance Criteria:**
-    *   VIZ.02.1: The system SHALL provide filtering options (e.g., "To Do", "In Progress", "Completed", "All").
-    *   VIZ.02.2: When a filter is applied, the dashboard MUST only display tasks matching the selected status.
-    *   VIZ.02.3: The filter application and results display MUST occur within 2 seconds.
-*   **Tag:** [DETERMINISTIC]
+    *   MUST provide filter options for at least "Pending", "In Progress" (if introduced later), and "Completed" statuses.
+    *   MUST update the displayed task list dynamically based on the selected filter.
+    *   MUST support filtering by `status` from the `Task` table.
 
-### 4.5. Notifications
-
-#### FR-NOT.01: Task Assignment Notification
-*   **Description:** Users MUST receive notifications when tasks are assigned to them.
+### 4.4 Notifications
+**FR-010: Task Assignment Notifications** [DETERMINISTIC]
+*   Users SHALL receive notifications when tasks are assigned to them.
 *   **Acceptance Criteria:**
-    *   NOT.01.1: When a task is assigned to a user, a visual notification (e.g., an in-app alert or badge) MUST appear for the assigned user within 5 seconds of the assignment action.
-    *   NOT.01.2: The notification MUST include the task title and the name of the user who made the assignment.
-    *   NOT.01.3: Clicking on the notification MUST direct the user to the details of the assigned task.
-*   **Tag:** [DETERMINISTIC]
-
----
+    *   MUST trigger a simple in-app notification or display a visual cue (e.g., badge) to the assigned user upon task assignment.
+    *   MUST deliver the notification to the assignee's active session if logged in.
+    *   MUST clearly indicate the task title and the assigner.
+    *   MAY include a link to the assigned task.
 
 ## 5. Non-Functional Requirements (NFR)
 
-### 5.1. Performance
+This section details the quality attributes and performance benchmarks for TaskFlow.
 
-#### NFR-PERF.01: Concurrent Users
-*   **Description:** The system SHOULD support at least 500 concurrent users without significant degradation in performance.
+**NFR-001: Scalability**
+*   The system SHALL support at least 500 concurrent users.
 *   **Acceptance Criteria:**
-    *   PERF.01.1: During load tests with 500 concurrent active users performing typical operations (viewing dashboard, creating tasks, updating status), 95% of API responses MUST be within the NFR-PERF.02 limits.
-    *   PERF.01.2: The system's CPU utilization SHALL not exceed 80% and memory utilization SHALL not exceed 75% under 500 concurrent users.
-*   **Tag:** [DETERMINISTIC]
+    *   Load testing with 500 concurrent virtual users performing typical operations (login, create task, view dashboard) SHALL show no more than 5% error rate.
+    *   Average response time under 500 concurrent users SHALL remain below 5 seconds.
 
-#### NFR-PERF.02: API Response Time
-*   **Description:** API response time SHOULD be under 2 seconds for 95% of all requests.
+**NFR-002: Performance**
+*   API response time SHALL be under 2 seconds for 90% of requests.
 *   **Acceptance Criteria:**
-    *   PERF.02.1: For standard CRUD operations (Create Task, View Task, Edit Task, Delete Task), 95% of API responses MUST complete within 1.5 seconds under normal load (up to 100 concurrent users).
-    *   PERF.02.2: For dashboard loading (retrieving all tasks for a user), 95% of API responses MUST complete within 2 seconds under normal load.
-*   **Tag:** [DETERMINISTIC]
+    *   All core API endpoints (e.g., `/api/tasks`, `/api/users/login`) SHALL respond within 2 seconds for individual requests under typical load (up to 100 concurrent users).
+    *   Average database query execution time SHALL be below 500ms.
 
-### 5.2. Security
-
-#### NFR-SEC.01: Password Hashing
-*   **Description:** User passwords MUST be securely hashed before storage.
+**NFR-003: Reliability**
+*   System uptime SHALL be at least 99.5%.
 *   **Acceptance Criteria:**
-    *   SEC.01.1: All user passwords stored in the database MUST be hashed using a strong, industry-standard, one-way cryptographic hashing algorithm (e.g., bcrypt, Argon2) with appropriate salting.
-    *   SEC.01.2: Raw passwords SHALL NOT be stored or logged anywhere in the system.
-*   **Tag:** [DETERMINISTIC]
+    *   The system (frontend and backend services) SHALL be available for users 99.5% of the time, excluding scheduled maintenance.
+    *   Monitoring tools SHALL confirm continuous availability against this target.
 
-#### NFR-SEC.02: HTTPS Communication
-*   **Description:** The application MUST use HTTPS for all communication between the client (browser) and the server.
+**NFR-004: Security (Password Hashing)**
+*   User passwords MUST be securely hashed before storage.
 *   **Acceptance Criteria:**
-    *   SEC.02.1: All network traffic to and from the TaskFlow application (frontend and backend APIs) MUST be encrypted using TLS 1.2 or higher.
-    *   SEC.02.2: Attempts to access the application via HTTP SHALL be automatically redirected to HTTPS.
-*   **Tag:** [DETERMINISTIC]
+    *   The system SHALL use a robust, industry-standard hashing algorithm (e.g., bcrypt, Argon2) for all new and updated user passwords.
+    *   Passwords MUST NOT be stored in plain text or easily reversible formats.
+    *   Authentication SHALL verify passwords against their hashes.
 
-### 5.3. Reliability
-
-#### NFR-REL.01: System Uptime
-*   **Description:** System uptime SHOULD be at least 99.5%.
+**NFR-005: Security (Data in Transit)**
+*   The application MUST use HTTPS for all communication.
 *   **Acceptance Criteria:**
-    *   REL.01.1: The TaskFlow system MUST be available and functional for at least 99.5% of the time, measured monthly, excluding scheduled maintenance windows.
-    *   REL.01.2: The system SHALL recover automatically from unexpected failures within 5 minutes.
-*   **Tag:** [DETERMINISTIC]
+    *   All traffic between the client (browser) and the backend server SHALL be encrypted using TLS/SSL (HTTPS).
+    *   Attempts to access the application via HTTP SHALL be automatically redirected to HTTPS.
+    *   JWTs SHALL be transmitted securely over HTTPS.
 
-### 5.4. Usability / User Experience
-
-#### NFR-USAB.01: Responsive UI
-*   **Description:** The UI MUST be responsive and usable on desktop and tablet devices.
+**NFR-006: Usability & Responsiveness**
+*   The UI MUST be responsive and usable on desktop and tablet devices.
 *   **Acceptance Criteria:**
-    *   USAB.01.1: The TaskFlow user interface MUST adapt fluidly to screen sizes ranging from 768px (tablet portrait) up to 1920px (desktop wide) without horizontal scrolling.
-    *   USAB.01.2: All interactive elements (buttons, forms, links) MUST be easily clickable and legible on specified devices.
-*   **Tag:** [DETERMINISTIC]
-
----
+    *   The application layout SHALL adapt gracefully to screen sizes from 768px (tablet portrait) up to typical desktop resolutions (1920px+).
+    *   All interactive elements (buttons, forms) SHALL be easily clickable/tappable without horizontal scrolling on tablet devices.
+    *   Text and images SHALL remain legible across supported screen sizes.
 
 ## 6. Use Case Analysis
 
-### 6.1. Use Case Diagram
+### 6.1 Use Case Diagram (High-Level)
 
 ```plantuml
 @startuml
 left to right direction
 
+actor "New User" as NewUser
+actor "Registered User" as RegUser
 actor "Team Member" as TM
-actor "Manager" as M
+actor "Manager" as Mgr
 
 rectangle "TaskFlow System" {
-    usecase "Register Account" as UC1.01
-    usecase "Log In" as UC1.02
-    usecase "Log Out" as UC1.03
-    usecase "Create Task" as UC2.01
-    usecase "View Task Details" as UC2.02
-    usecase "Edit Task" as UC2.03
-    usecase "Mark Task Completed" as UC2.04
-    usecase "Delete Task" as UC2.05
-    usecase "Assign Task" as UC3.01
-    usecase "View All Tasks on Dashboard" as UC4.01
-    usecase "Filter Tasks by Status" as UC4.02
-    usecase "Receive Task Assignment Notification" as UC5.01
+    usecase "Register Account" as UC1
+    usecase "Login" as UC2
+    usecase "Create Task" as UC3
+    usecase "Assign Task" as UC4
+    usecase "Edit Task" as UC5
+    usecase "Mark Task as Completed" as UC6
+    usecase "Delete Task" as UC7
+    usecase "View All Tasks (Dashboard)" as UC8
+    usecase "Filter Tasks by Status" as UC9
+    usecase "Receive Task Assignment Notification" as UC10
 }
 
-M --|> TM
+NewUser --> UC1
+RegUser --> UC2
+RegUser --|> TM
+RegUser --|> Mgr
 
-TM --> UC1.01
-TM --> UC1.02
-TM --> UC1.03
-TM --> UC2.02
-TM --> UC2.04
-TM --> UC4.01
-TM --> UC4.02
-TM --> UC5.01
+TM --> UC3
+TM --> UC4
+TM --> UC5
+TM --> UC6
+TM --> UC7
+TM --> UC8
+TM --> UC9
+TM --> UC10
 
-M --> UC2.01
-M --> UC2.03
-M --> UC2.05
-M --> UC3.01
-
-UC1.01 ..> UC1.02 : extends
+Mgr --> UC3
+Mgr --> UC4
+Mgr --> UC5
+Mgr --> UC7
+Mgr --> UC8
+Mgr --> UC9
 
 @enduml
 ```
 
-### 6.2. Detailed Use Cases
+### 6.2 Detailed Use Cases
 
-#### UC1.01: Register a New Account
-
-*   **Actor:** Team Member
-*   **Preconditions:**
-    *   User is not logged in.
-    *   User has internet connectivity.
-*   **Trigger:** User navigates to the registration page and clicks "Sign Up".
+#### UC1: Register a New User Account
+*   **Description:** Allows a new user to create an account to access TaskFlow.
+*   **Actors:** New User
+*   **Pre-conditions:** User has internet connectivity and access to the TaskFlow registration page.
 *   **Main Flow:**
-    1.  User enters a unique email, name, and password in the registration form.
-    2.  User confirms password.
-    3.  User clicks the "Register" button.
-    4.  System validates inputs (e.g., email format, password strength).
-    5.  System hashes the password (NFR-SEC.01).
-    6.  System creates a new user record in the database (FR-UM.01.2).
-    7.  System displays a "Registration Successful" message.
-    8.  System redirects user to the login page.
+    1.  New User navigates to the TaskFlow registration page.
+    2.  System displays the registration form.
+    3.  New User enters email, name, and desired password.
+    4.  New User submits the form.
+    5.  System validates input (email format, password strength, uniqueness of email).
+    6.  System hashes the password and creates a new user record in the database.
+    7.  System displays a success message and redirects to the login page.
 *   **Alternative Flows:**
-    *   **AF1.1: Invalid Input:** If input validation fails (e.g., invalid email, passwords don't match), the system displays specific error messages next to the offending fields. User corrects input and retries.
-    *   **AF1.2: Email Already Registered:** If the email provided already exists, the system displays an error message "Email already registered. Please log in or use a different email."
-*   **Postconditions:**
-    *   A new user account is created in the system.
-    *   User is redirected to the login page.
+    *   **A1: Invalid Input:** If validation fails, system displays specific error messages for each invalid field.
+    *   **A2: Email Already Exists:** If the email is already registered, system displays an error message.
+*   **Post-conditions:** A new user account is created and stored securely.
 
-#### UC1.02: Log In to TaskFlow
-
-*   **Actor:** Team Member
-*   **Preconditions:**
-    *   User has a registered account (UC1.01).
-    *   User is not currently logged in.
-*   **Trigger:** User navigates to the login page and clicks "Log In".
+#### UC2: Log In to TaskFlow
+*   **Description:** Allows a registered user to securely access their TaskFlow account.
+*   **Actors:** Registered User
+*   **Pre-conditions:** User has a registered TaskFlow account and is on the login page.
 *   **Main Flow:**
-    1.  User enters their registered email and password in the login form.
-    2.  User clicks the "Log In" button.
-    3.  System verifies the credentials against stored hashed passwords.
-    4.  System generates a JWT for the session.
-    5.  System redirects the user to their TaskFlow dashboard (FR-VIZ.01).
+    1.  Registered User enters their email and password into the login form.
+    2.  Registered User submits the form.
+    3.  System verifies credentials against stored data.
+    4.  System generates and issues a JWT.
+    5.  System redirects the user to the main TaskFlow dashboard.
 *   **Alternative Flows:**
-    *   **AF2.1: Invalid Credentials:** If the email/password combination does not match a registered user, the system displays an error message "Invalid email or password." User can retry.
-    *   **AF2.2: Network Error:** If there's a network issue, the system displays a connection error. User can retry.
-*   **Postconditions:**
-    *   User is authenticated and redirected to the TaskFlow dashboard.
-    *   A secure session is established.
+    *   **A1: Invalid Credentials:** If credentials do not match, system displays an "Invalid email or password" error.
+*   **Post-conditions:** User is authenticated and granted access to TaskFlow features; a valid JWT is issued.
 
-#### UC2.01: Create a New Task
-
-*   **Actor:** Manager
-*   **Preconditions:**
-    *   User is logged in.
-    *   User has permissions to create tasks.
-*   **Trigger:** User clicks on a "Create New Task" button/link on the dashboard.
+#### UC3: Create a New Task
+*   **Description:** Enables a team member to define and add a new work item to the system.
+*   **Actors:** Team Member, Manager
+*   **Pre-conditions:** User is logged in and has access to the task creation interface.
 *   **Main Flow:**
-    1.  System displays a "Create Task" form.
-    2.  User enters a task title, description, selects a priority (Low/Medium/High), and initial status (e.g., To Do).
-    3.  (Optional) User selects one or more team members to assign the task to (FR-COL.01).
-    4.  User clicks the "Save Task" button.
-    5.  System validates the input.
-    6.  System creates a new `Task` record in the database with `created_by` and `created_at` (FR-TM.01.3).
-    7.  If assigned, system creates `Assignment` records (FR-COL.01.2).
-    8.  System displays a "Task Created" confirmation message.
-    9.  System updates the dashboard (FR-VIZ.01) to show the new task.
-    10. If assigned, system sends a notification to the assigned user(s) (FR-NOT.01).
+    1.  User clicks on "Create New Task" (or similar action).
+    2.  System displays the task creation form/modal.
+    3.  User inputs task title, description (optional), and selects priority.
+    4.  User submits the task form.
+    5.  System validates input, sets default status to "Pending," records creator and timestamp.
+    6.  System saves the task to the database.
+    7.  System displays the newly created task on the dashboard.
 *   **Alternative Flows:**
-    *   **AF3.1: Invalid Input:** If validation fails (e.g., empty title), the system displays an error message and highlights the problematic fields. User corrects and retries.
-*   **Postconditions:**
-    *   A new task is created and stored in the database.
-    *   The dashboard is updated to reflect the new task.
-    *   Assigned users receive a notification (if applicable).
+    *   **A1: Invalid Input:** If title is missing, system displays an error message.
+*   **Post-conditions:** A new task record is created in the `Task` table and visible on the dashboard.
 
-#### UC2.04: Mark a Task as Completed
-
-*   **Actor:** Team Member
-*   **Preconditions:**
-    *   User is logged in.
-    *   User has an assigned or relevant task on the dashboard.
-*   **Trigger:** User clicks a "Mark Complete" button next to a task on the dashboard or within task details.
+#### UC4: Assign a Task to a Team Member
+*   **Description:** Allows a user to delegate responsibility for a task to another team member.
+*   **Actors:** Team Member, Manager
+*   **Pre-conditions:** A task exists, and the user has permission to assign it.
 *   **Main Flow:**
-    1.  User locates a task on the dashboard or task details page.
-    2.  User clicks the "Mark Complete" action for that task.
-    3.  System updates the task's `status` to "Completed" in the database (FR-TM.04.2).
-    4.  System displays a "Task Marked Complete" confirmation message.
-    5.  System immediately updates the dashboard (FR-VIZ.01) to reflect the new status.
+    1.  User navigates to a task's details or selects a task from the dashboard.
+    2.  User initiates the "Assign Task" action.
+    3.  System presents a list of available team members.
+    4.  User selects a team member.
+    5.  User confirms the assignment.
+    6.  System updates the task's assignee in the `Task` and `Assignment` tables.
+    7.  System triggers a notification to the assigned team member.
 *   **Alternative Flows:**
-    *   **AF4.1: Task Already Completed:** If the task is already marked as completed, the system prevents re-marking and displays an informative message.
-*   **Postconditions:**
-    *   The task's status is updated to "Completed".
-    *   The change is reflected on the dashboard.
+    *   **A1: No Team Members:** If no other team members are available, the option to assign is disabled or an informative message is shown.
+*   **Post-conditions:** The task is linked to an assignee, and a notification is sent.
 
-#### UC4.01: View All Tasks on Dashboard
-
-*   **Actor:** Team Member
-*   **Preconditions:**
-    *   User is logged in.
-*   **Trigger:**
-    *   User successfully logs in.
-    *   User navigates to the dashboard via a menu link.
+#### UC5: Edit Task Details
+*   **Description:** Allows the task creator or assignee to modify the title, description, or priority of an existing task.
+*   **Actors:** Team Member
+*   **Pre-conditions:** User is logged in and has permission to edit the specific task.
 *   **Main Flow:**
-    1.  System retrieves all tasks relevant to the logged-in user (created by them, or assigned to them, or all visible team tasks).
-    2.  System renders the dashboard displaying the list of tasks (FR-VIZ.01.2).
-    3.  Each task entry shows its title, description (truncated), status, priority, and assigned team members.
+    1.  User selects a task from the dashboard.
+    2.  User initiates the "Edit Task" action.
+    3.  System displays an editable form pre-filled with current task details.
+    4.  User modifies the desired fields (title, description, priority).
+    5.  User saves the changes.
+    6.  System updates the `Task` record in the database.
+    7.  System displays the updated task on the dashboard.
+*   **Post-conditions:** The task's details are updated in the system.
+
+#### UC6: Mark Task as Completed
+*   **Description:** Allows the assignee to indicate that work on a task is finished.
+*   **Actors:** Team Member
+*   **Pre-conditions:** User is logged in and is the assignee (or creator) of the task, and the task is not already "Completed."
+*   **Main Flow:**
+    1.  User selects a task from the dashboard or task details view.
+    2.  User initiates the "Mark as Completed" action.
+    3.  System updates the `status` of the task to "Completed" in the `Task` table.
+    4.  System displays the updated task status on the dashboard.
+*   **Post-conditions:** Task status is updated to "Completed."
+
+#### UC7: Delete Task
+*   **Description:** Allows the task creator to permanently remove a task from the system.
+*   **Actors:** Team Member, Manager
+*   **Pre-conditions:** User is logged in and is the creator of the task.
+*   **Main Flow:**
+    1.  User selects a task from the dashboard or task details view.
+    2.  User initiates the "Delete Task" action.
+    3.  System displays a confirmation dialog.
+    4.  User confirms deletion.
+    5.  System removes the task record from the `Task` table and associated entries from the `Assignment` table.
+    6.  System updates the dashboard to reflect the task's removal.
 *   **Alternative Flows:**
-    *   **AF5.1: No Tasks:** If no tasks are found, the system displays a message "No tasks found. Start by creating one!"
-    *   **AF5.2: Performance Degradation:** If the system takes longer than 2 seconds to load (NFR-PERF.02), the user might experience a delay.
-*   **Postconditions:**
-    *   User is viewing the dashboard with a list of tasks.
+    *   **A1: User Cancels:** User cancels the confirmation, and the task remains.
+*   **Post-conditions:** Task and its assignments are permanently removed from the database.
 
----
+#### UC8: View All Team Tasks (Dashboard)
+*   **Description:** Allows a team member or manager to get an overview of current tasks and their statuses.
+*   **Actors:** Team Member, Manager
+*   **Pre-conditions:** User is logged in.
+*   **Main Flow:**
+    1.  User successfully logs in, or navigates to the dashboard.
+    2.  System retrieves all relevant tasks (e.g., all tasks for the user's team).
+    3.  System displays tasks in a structured list, showing title, status, priority, and assignee.
+*   **Post-conditions:** User has a current view of all team tasks.
 
-## 7. Data Model
+#### UC9: Filter Tasks on Dashboard
+*   **Description:** Allows a user to find specific tasks based on their status.
+*   **Actors:** Team Member, Manager
+*   **Pre-conditions:** User is on the dashboard with tasks displayed.
+*   **Main Flow:**
+    1.  User selects a filter option for task status (e.g., "Pending", "Completed").
+    2.  System dynamically updates the dashboard to display only tasks matching the selected status.
+*   **Alternative Flows:**
+    *   **A1: No Matching Tasks:** If no tasks match the filter, system displays a "No tasks found" message.
+*   **Post-conditions:** The dashboard view is updated to show only tasks matching the filter criteria.
 
-### 7.1. Entity-Relationship Diagram (ERD)
+#### UC10: Receive Task Assignment Notification
+*   **Description:** Informs a task assignee when a new task is delegated to them.
+*   **Actors:** Task Assignee
+*   **Pre-conditions:** A task has been assigned to the user.
+*   **Main Flow:**
+    1.  A user (assigner) assigns a task to the Assignee.
+    2.  System generates an in-app notification.
+    3.  Assignee's client-side application receives and displays the notification (e.g., a banner, badge update).
+    4.  Assignee can click on the notification to view the assigned task.
+*   **Post-conditions:** Assignee is aware of the new task.
 
-```plantuml
-@startuml
-entity "User" {
-    * user_id : UUID <<PK>>
-    --
-    name : VARCHAR(255)
-    email : VARCHAR(255) <<Unique>>
-    password_hash : TEXT
-    created_at : TIMESTAMP WITH TIME ZONE
-}
+## 7. Data Requirements (DR)
 
-entity "Task" {
-    * task_id : UUID <<PK>>
-    --
-    title : VARCHAR(255)
-    description : TEXT
-    status : VARCHAR(50)
-    priority : VARCHAR(50)
-    created_by : UUID <<FK>>
-    created_at : TIMESTAMP WITH TIME ZONE
-}
+### 7.1 Entity Relationship Overview
+The system relies on three core entities: User, Task, and Assignment, linked by their respective IDs.
 
-entity "Assignment" {
-    * assignment_id : UUID <<PK>>
-    --
-    task_id : UUID <<FK>>
-    user_id : UUID <<FK>>
-    assigned_at : TIMESTAMP WITH TIME ZONE
-}
+### 7.2 Data Schemas
 
-User "1" -- "0..N" Task : created_by >
-Task "1" -- "0..N" Assignment : has >
-User "1" -- "0..N" Assignment : is_assigned_to >
+#### User Table
+*   `user_id` (Primary Key, UUID/Integer)
+*   `name` (VARCHAR, NOT NULL)
+*   `email` (VARCHAR, NOT NULL, UNIQUE)
+*   `password_hash` (VARCHAR, NOT NULL)
+*   `created_at` (TIMESTAMP, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
 
-@enduml
-```
+#### Task Table
+*   `task_id` (Primary Key, UUID/Integer)
+*   `title` (VARCHAR, NOT NULL)
+*   `description` (TEXT, NULLABLE)
+*   `status` (VARCHAR, NOT NULL, e.g., 'Pending', 'In Progress', 'Completed')
+*   `priority` (VARCHAR, NOT NULL, e.g., 'Low', 'Medium', 'High')
+*   `created_by` (UUID/Integer, Foreign Key to `User.user_id`, NOT NULL)
+*   `created_at` (TIMESTAMP, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
 
-### 7.2. Detailed Schema
-
-#### Table: `users`
-
-| Column Name     | Data Type                  | Constraints                 | Description                                      |
-| :-------------- | :------------------------- | :-------------------------- | :----------------------------------------------- |
-| `user_id`       | `UUID`                     | `PRIMARY KEY`, `NOT NULL`   | Unique identifier for the user.                  |
-| `name`          | `VARCHAR(255)`             | `NOT NULL`                  | Full name of the user.                           |
-| `email`         | `VARCHAR(255)`             | `NOT NULL`, `UNIQUE`        | Unique email address of the user for login.      |
-| `password_hash` | `TEXT`                     | `NOT NULL`                  | Securely hashed password (NFR-SEC.01).           |
-| `created_at`    | `TIMESTAMP WITH TIME ZONE` | `NOT NULL`, `DEFAULT NOW()` | Timestamp when the user account was created.     |
-
-#### Table: `tasks`
-
-| Column Name     | Data Type                  | Constraints                             | Description                                            |
-| :-------------- | :------------------------- | :-------------------------------------- | :----------------------------------------------------- |
-| `task_id`       | `UUID`                     | `PRIMARY KEY`, `NOT NULL`               | Unique identifier for the task.                        |
-| `title`         | `VARCHAR(255)`             | `NOT NULL`                              | Title of the task (FR-TM.01.2).                        |
-| `description`   | `TEXT`                     | `NULLABLE`                              | Detailed description of the task.                      |
-| `status`        | `VARCHAR(50)`              | `NOT NULL`, `DEFAULT 'To Do'`           | Current status of the task (e.g., 'To Do', 'In Progress', 'Completed'). |
-| `priority`      | `VARCHAR(50)`              | `NOT NULL`, `DEFAULT 'Medium'`          | Priority level of the task (e.g., 'Low', 'Medium', 'High'). |
-| `created_by`    | `UUID`                     | `NOT NULL`, `FOREIGN KEY REFERENCES users(user_id)` | User who created the task (FR-TM.01.3).                |
-| `created_at`    | `TIMESTAMP WITH TIME ZONE` | `NOT NULL`, `DEFAULT NOW()`             | Timestamp when the task was created.                   |
-
-#### Table: `assignments`
-
-| Column Name       | Data Type                  | Constraints                                     | Description                                     |
-| :---------------- | :------------------------- | :---------------------------------------------- | :---------------------------------------------- |
-| `assignment_id`   | `UUID`                     | `PRIMARY KEY`, `NOT NULL`                       | Unique identifier for the assignment.           |
-| `task_id`         | `UUID`                     | `NOT NULL`, `FOREIGN KEY REFERENCES tasks(task_id)` | Identifier of the assigned task.                |
-| `user_id`         | `UUID`                     | `NOT NULL`, `FOREIGN KEY REFERENCES users(user_id)` | Identifier of the user to whom the task is assigned. |
-| `assigned_at`     | `TIMESTAMP WITH TIME ZONE` | `NOT NULL`, `DEFAULT NOW()`                     | Timestamp when the task was assigned.           |
-| `(task_id, user_id)` |                            | `UNIQUE`                                        | Ensures a task is assigned to a user only once. |
-
----
+#### Assignment Table
+*   `assignment_id` (Primary Key, UUID/Integer)
+*   `task_id` (UUID/Integer, Foreign Key to `Task.task_id`, NOT NULL)
+*   `user_id` (UUID/Integer, Foreign Key to `User.user_id`, NOT NULL)
+*   `assigned_at` (TIMESTAMP, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
 
 ## 8. Technology Stack
 
@@ -460,39 +394,26 @@ User "1" -- "0..N" Assignment : is_assigned_to >
 *   **Backend:** FastAPI (Python)
 *   **Database:** PostgreSQL
 *   **Authentication:** JWT-based authentication
-*   **Deployment:** Docker, AWS or Azure Cloud
-
----
+*   **Deployment:** Docker (for containerization), AWS or Azure Cloud (for hosting)
 
 ## 9. Constraints, Assumptions, and Risks
 
-### 9.1. Constraints
+### 9.1 Constraints
+*   **Time Constraint:** The initial release MUST be completed within 3 months from project kickoff. This heavily influences scope prioritization.
+*   **Cost Constraint:** The system SHOULD minimize operational costs. This will guide infrastructure choices and resource provisioning (e.g., utilizing managed services where cost-effective).
+*   **Technology Constraint:** Only open-source technologies SHOULD be used where possible. This restricts the use of proprietary tools or platforms.
 
-*   **Time:** Initial release MUST be completed within 3 months. This is a critical constraint impacting feature prioritization and complexity.
-*   **Operational Costs:** The system SHOULD minimize operational costs, influencing architectural decisions and technology choices.
-*   **Technology:** Only open-source technologies SHOULD be used where possible, guiding the selection of frameworks, libraries, and infrastructure components.
+### 9.2 Assumptions
+*   **User Familiarity:** Users are assumed to have basic familiarity with web applications and common UI patterns.
+*   **Team Size:** Teams using TaskFlow are assumed to consist of fewer than 50 members. This impacts scalability considerations and UI design for visibility.
+*   **Internet Connectivity:** Reliable internet connectivity is assumed to be available to all users accessing the TaskFlow system.
 
-### 9.2. Assumptions
-
-*   **User Familiarity:** Users are assumed to have basic familiarity with common web applications, implying standard UI/UX patterns can be followed without extensive onboarding.
-*   **Team Size:** Teams using TaskFlow will consist of fewer than 50 members. This assumption helps scope scalability and collaboration features (NFR-PERF.01).
-*   **Internet Connectivity:** Users are assumed to have reliable internet connectivity to access the web application.
-*   **Manager Role:** While not explicitly defined, it's assumed some users will act as "managers" capable of creating and assigning tasks, overseeing the team.
-
-### 9.3. Risks
-
-*   **R1: Project Timeline Overrun:**
-    *   **Description:** The 3-month initial release deadline is aggressive. Unexpected technical challenges or scope creep could lead to delays.
-    *   **Mitigation:** Strict scope management for MVP. Prioritize critical features only. Agile development with frequent reviews. Buffer time in planning.
-*   **R2: Security Vulnerabilities:**
-    *   **Description:** Despite using JWT and password hashing, any misconfiguration or overlooked vulnerability could expose user data.
-    *   **Mitigation:** Adhere strictly to NFR-SEC.01 and NFR-SEC.02. Implement secure coding practices. Conduct security reviews and penetration testing before launch.
-*   **R3: Performance Degradation:**
-    *   **Description:** If the user base or task volume grows rapidly beyond assumptions, performance (NFR-PERF.01, NFR-PERF.02) could suffer, leading to poor user experience.
-    *   **Mitigation:** Regular performance testing and monitoring. Design for scalability from the outset (e.g., efficient database queries, proper indexing). Plan for horizontal scaling for backend services.
-*   **R4: Low User Adoption:**
-    *   **Description:** If the system is not perceived as "simple and easy to use" or doesn't meet critical user needs, adoption rates might fall below 80%.
-    *   **Mitigation:** Focus on intuitive UI/UX as per NFR-USAB.01. Gather early user feedback. Provide clear onboarding and support.
-*   **R5: Technical Debt:**
-    *   **Description:** The rapid development cycle (3 months) might lead to rushed implementations or shortcuts, accumulating technical debt that hinders future development or maintenance.
-    *   **Mitigation:** Enforce coding standards and review processes. Document architectural decisions. Prioritize modular and clean code where possible, even within tight deadlines.
+### 9.3 Risks
+*   **Scope Creep:** Given the "simple" nature, there's a risk of stakeholders requesting features out of scope (e.g., "advanced project analytics," "AI features") during development.
+    *   *Mitigation:* Strict adherence to the defined "In Scope" features and a clear change management process for any new requests.
+*   **Performance Under Load:** Achieving NFR1 (500 concurrent users) and NFR2 (<2s API response) within the 3-month timeline might be challenging if not architected and optimized carefully from the start.
+    *   *Mitigation:* Early performance testing, database indexing, efficient API design, and horizontal scaling strategies.
+*   **Security Vulnerabilities:** Imperfect implementation of NFR4 (password hashing), NFR5 (HTTPS), or JWT could lead to data breaches or unauthorized access.
+    *   *Mitigation:* Use of established libraries for security features, regular security reviews (e.g., static code analysis), and penetration testing prior to launch.
+*   **User Adoption:** Despite the goal, if the UI/UX isn't truly intuitive or if there are unexpected usability issues, adoption might fall short of the 80% success criteria.
+    *   *Mitigation:* Iterative UI/UX design with user feedback, beta testing with target users, and clear onboarding documentation.
